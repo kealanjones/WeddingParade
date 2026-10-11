@@ -66,7 +66,7 @@ async function newPage(viewport, opts = {}) {
   const page = await context.newPage();
   page.on("pageerror", (e) => console.log("pageerror:", e.message));
   page.on("console", (m) => m.type() === "error" && console.log("console error:", m.text()));
-  page.on("dialog", (d) => { console.log("dialog:", d.message()); d.dismiss(); });
+  page.on("dialog", (d) => { console.log("UNEXPECTED dialog:", d.message()); d.dismiss(); });
   return page;
 }
 

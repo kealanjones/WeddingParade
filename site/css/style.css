@@ -280,3 +280,12 @@ body.parade {
   .tool-row { gap: 8px; }
   .tool-row .btn-small { padding: 8px 14px; }
 }
+
+/* on-page messages (instead of pop-ups) */
+.notice {
+  position: fixed; z-index: 60; left: 50%; translate: -50% 0; bottom: max(16px, env(safe-area-inset-bottom));
+  width: min(560px, calc(100vw - 32px)); display: flex; gap: 14px; align-items: center;
+  background: var(--ink); color: #fff; padding: 14px 16px 14px 20px; border-radius: 18px;
+  box-shadow: 0 14px 40px rgba(35, 48, 74, 0.35); font-size: 1.1rem;
+}
+.notice p { margin: 0; flex: 1; min-width: 0; }

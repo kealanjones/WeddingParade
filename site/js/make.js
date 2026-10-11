@@ -25,6 +25,14 @@
     $("busy-text").textContent = text || "";
     $("busy").hidden = !text;
   }
+  let noticeTimer = 0;
+  function notice(msg) {
+    $("notice-text").textContent = msg;
+    $("notice").hidden = false;
+    clearTimeout(noticeTimer);
+    noticeTimer = setTimeout(() => ($("notice").hidden = true), 9000);
+  }
+  $("notice-close").addEventListener("click", () => ($("notice").hidden = true));
   const nextFrame = () => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 30)));
 
   document.querySelectorAll("[data-go]").forEach((b) =>
@@ -69,7 +77,7 @@
       show("crop");
     } catch (err) {
       busy(null);
-      alert(err.message + "\n\nIf it keeps happening, send the photo to us on WhatsApp (details at the bottom of the page).");
+      notice(err.message + " If it keeps happening, send the photo to us on WhatsApp (details at the bottom of the page).");
     }
   });
 
@@ -123,7 +131,7 @@
     const strength = Number($("strength").value) / 100;
     state.result = Cleanup.process(state.photo, state.crop, strength);
     if (!state.result) {
-      alert("We couldn't find a drawing in that box. Try moving the corners, or lowering the cleanup strength.");
+      notice("We couldn't find a drawing in that box. Try moving the corners, or lowering the cleanup strength.");
       return false;
     }
     paintPreview(state.result.canvas);
@@ -175,7 +183,7 @@
   });
   $("draw-done").addEventListener("click", () => {
     if (!pad.hasDrawing()) {
-      alert("Draw your balloon first. Any shape you like!");
+      notice("Draw your balloon first. Any shape you like!");
       return;
     }
     state.drawn = Cleanup.solidifyDrawing(pad.canvas);
