@@ -30,7 +30,7 @@ Nothing a guest sends appears until it's approved. Run these in the **SQL Editor
 ```sql
 -- See everything waiting, newest first (open image_path links to look at them)
 select created_at, name, note, source,
-       'https://YOUR-PROJECT-REF.supabase.co/storage/v1/object/public/balloons/' || image_path as picture
+       'https://reubyfbbvfeuqrxvzioe.supabase.co/storage/v1/object/public/balloons/' || image_path as picture
 from balloons where approved = false order by created_at desc;
 
 -- Approve everything
