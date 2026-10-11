@@ -205,7 +205,7 @@ try {
     await page.goto(`http://127.0.0.1:${PORT}/parade.html`);
     // the lift-off: stuck on the drawers, peeling, rising, then drifting
     let elapsed = 0;
-    for (const at of [1500, 3200, 6000, 14000]) {
+    for (const at of [1500, 6000, 11000, 20000]) {
       await page.waitForTimeout(at - elapsed);
       elapsed = at;
       await shot(page, `08-parade-${name}-${at}ms.png`, false);

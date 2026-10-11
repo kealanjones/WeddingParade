@@ -297,17 +297,33 @@ body.parade {
   background: rgba(255, 255, 255, 0.75); font-weight: 700; font-size: clamp(0.95rem, 1.6vw, 1.3rem); color: var(--ink);
 }
 .parade-count:empty { display: none; }
-.fullscreen-btn {
+.corner-btns {
   position: fixed; z-index: 3; right: 12px; top: max(12px, env(safe-area-inset-top));
+  display: flex; gap: 8px;
+}
+.corner-btn {
   min-height: 44px; padding: 8px 16px; border: 0; border-radius: 999px; cursor: pointer;
   background: rgba(255, 255, 255, 0.8); color: var(--ink); font: 700 1rem var(--body);
   opacity: 0.55; transition: opacity 0.3s;
 }
-.fullscreen-btn:hover, .fullscreen-btn:focus-visible { opacity: 1; }
-@media (hover: none), (max-width: 760px) { .fullscreen-btn { display: none; } }
-/* waiting card sits high so the chest of painted balloons shows below it */
-.waiting { align-items: flex-start; padding-top: max(5vh, 16px); }
-@media (max-height: 700px) { .waiting-balloon { display: none; } }
+.corner-btn:hover, .corner-btn:focus-visible { opacity: 1; }
+#fullscreen { display: inline-block; }
+#fullscreen[hidden], #replay[hidden] { display: none; }
+@media (hover: none), (max-width: 760px) { #fullscreen { display: none !important; } }
+@media (max-width: 760px) {
+  .corner-btns { top: auto; bottom: max(14px, env(safe-area-inset-bottom)); right: 12px; }
+}
+/* waiting card sits at the top so the room and the chest show below it */
+.waiting { align-items: flex-start; padding-top: max(3vh, 12px); pointer-events: none; }
+.waiting-card { pointer-events: auto; padding: 18px 22px; max-width: 560px; }
+.waiting-card h1 { font-size: clamp(1.6rem, 4.6vw, 2.6rem); margin-bottom: 10px; }
+.waiting-card .big { margin-bottom: 4px; }
+.waiting-card p:last-child { margin-bottom: 0; }
+.waiting-card .btn { min-height: 52px; }
+@media (min-width: 1000px) {
+  .waiting { justify-content: flex-start; padding-left: 4vw; padding-top: 6vh; }
+  .waiting-card { max-width: 30vw; }
+}
 
 /* ---------- guest page refinements ---------- */
 /* story: chest beside the text even on phones, so the page gets to the point */
