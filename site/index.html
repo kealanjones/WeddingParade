@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Sop and Bop's Wedding Balloon Parade</title>
+  <meta name="description" content="Draw a hot-air balloon for Sophie and Ben's wedding parade.">
+  <meta name="theme-color" content="#8fd0f2">
+  <meta property="og:title" content="Sop and Bop's Wedding Balloon Parade">
+  <meta property="og:description" content="Draw a hot-air balloon for Sop and Bop. It joins the parade on Friday 16 October.">
+  <meta property="og:image" content="img/og.png">
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Shrikhand&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="make">
+  <div class="sky-bg" aria-hidden="true">
+    <div class="sun"></div>
+    <div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div>
+  </div>
+
+  <main class="page">
+    <header class="hero">
+      <p class="kicker">Sophie &amp; Ben · Bristol · 16 October 2026</p>
+      <h1>Sop and Bop's <span>Wedding Balloon Parade</span></h1>
+    </header>
+
+    <section class="card story">
+      <svg class="chest" viewBox="0 0 200 170" aria-hidden="true" focusable="false">
+        <rect x="18" y="12" width="164" height="132" rx="8" fill="#e9b97a" stroke="#7a4a22" stroke-width="4"/>
+        <rect x="10" y="6" width="180" height="14" rx="5" fill="#d79e5b" stroke="#7a4a22" stroke-width="4"/>
+        <g fill="#f6dcb2" stroke="#7a4a22" stroke-width="3">
+          <rect x="30" y="28" width="140" height="32" rx="4"/>
+          <rect x="30" y="66" width="140" height="32" rx="4"/>
+          <rect x="30" y="104" width="140" height="32" rx="4"/>
+        </g>
+        <g stroke="#3a2a1e" stroke-width="1.5">
+          <ellipse cx="52" cy="40" rx="8" ry="9" fill="#ef4f6b"/><rect x="49" y="52" width="6" height="4" fill="#8a5a2b"/>
+          <ellipse cx="128" cy="38" rx="7" ry="8" fill="#ffc234"/><rect x="125" y="49" width="5" height="4" fill="#8a5a2b"/>
+          <path d="M86 72c-6-6 2-12 6-6 4-6 12 0 6 6l-6 7z" fill="#ff8fb8"/><rect x="89" y="84" width="5" height="4" fill="#8a5a2b"/>
+          <ellipse cx="150" cy="80" rx="7" ry="10" fill="#3aa8e6"/><rect x="147" y="93" width="5" height="3" fill="#8a5a2b"/>
+          <ellipse cx="60" cy="116" rx="9" ry="9" fill="#5cc27a"/><rect x="57" y="128" width="6" height="4" fill="#8a5a2b"/>
+          <ellipse cx="112" cy="118" rx="7" ry="9" fill="#9b6bff"/><rect x="109" y="130" width="5" height="3" fill="#8a5a2b"/>
+        </g>
+        <g fill="#7a4a22"><circle cx="100" cy="44" r="3"/><circle cx="118" cy="82" r="3"/><circle cx="86" cy="120" r="3"/></g>
+        <rect x="26" y="144" width="12" height="16" fill="#7a4a22"/><rect x="162" y="144" width="12" height="16" fill="#7a4a22"/>
+      </svg>
+      <div>
+        <h2>A balloon from every visitor</h2>
+        <p>At home, Sop and Bop have a chest of drawers that every visitor paints a hot-air balloon on. Each one is a little memento, and the chest keeps on growing.</p>
+        <p>For the wedding we're taking the tradition into the sky. <strong>Draw a balloon, any shape you like</strong>, and it will float in a parade alongside everyone else's.</p>
+      </div>
+    </section>
+
+    <!-- Step 1: choose how -->
+    <section class="card" id="step-choose">
+      <h2>Make your balloon</h2>
+      <div class="routes">
+        <div class="route route-main">
+          <p class="badge">Recommended</p>
+          <h3>Draw on paper, then take a photo</h3>
+          <ul class="tips">
+            <li><span class="tip-ico" aria-hidden="true">🎨</span> Use <strong>lots of colour</strong></li>
+            <li><span class="tip-ico" aria-hidden="true">🎈</span> Any balloon shape you like, there's no template</li>
+            <li><span class="tip-ico" aria-hidden="true">✏️</span> A dark outline helps</li>
+            <li><span class="tip-ico" aria-hidden="true">📄</span> Plain paper, in good light</li>
+            <li><span class="tip-ico" aria-hidden="true">📷</span> Photograph it from straight above</li>
+          </ul>
+          <label class="btn btn-big" for="photo-input">
+            <span aria-hidden="true">📷</span> Add a photo of my balloon
+          </label>
+          <input type="file" id="photo-input" accept="image/*,.heic,.heif" class="visually-hidden">
+        </div>
+        <div class="route">
+          <h3>Or draw on screen</h3>
+          <p>No paper handy? Draw your balloon with your finger or mouse.</p>
+          <button class="btn btn-secondary" id="start-draw" type="button"><span aria-hidden="true">🖌️</span> Draw on screen</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Step 2a: crop -->
+    <section class="card" id="step-crop" hidden>
+      <h2>Frame your balloon</h2>
+      <p>Drag the corners so the box fits snugly around your drawing.</p>
+      <div class="crop-wrap" id="crop-wrap">
+        <canvas id="crop-canvas"></canvas>
+        <div class="crop-box" id="crop-box">
+          <span class="handle" data-h="nw"></span><span class="handle" data-h="ne"></span>
+          <span class="handle" data-h="sw"></span><span class="handle" data-h="se"></span>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-secondary" type="button" data-go="choose">Back</button>
+        <button class="btn" type="button" id="crop-done">Cut it out</button>
+      </div>
+    </section>
+
+    <!-- Step 2b: draw -->
+    <section class="card" id="step-draw" hidden>
+      <h2>Draw your balloon</h2>
+      <div class="draw-tools" role="toolbar" aria-label="Drawing tools">
+        <div class="palette" id="palette" role="radiogroup" aria-label="Colour"></div>
+        <div class="tool-row">
+          <div class="seg" role="radiogroup" aria-label="Tool">
+            <button type="button" class="tool on" data-tool="brush" aria-pressed="true">🖌️ Brush</button>
+            <button type="button" class="tool" data-tool="fill" aria-pressed="false">🪣 Fill</button>
+            <button type="button" class="tool" data-tool="eraser" aria-pressed="false">🧽 Eraser</button>
+          </div>
+          <div class="seg" role="radiogroup" aria-label="Brush size">
+            <button type="button" class="size" data-size="5" aria-label="Thin brush"><i style="width:6px;height:6px"></i></button>
+            <button type="button" class="size on" data-size="12" aria-label="Medium brush"><i style="width:12px;height:12px"></i></button>
+            <button type="button" class="size" data-size="28" aria-label="Thick brush"><i style="width:22px;height:22px"></i></button>
+          </div>
+          <button type="button" class="btn btn-small btn-secondary" id="undo">↩︎ Undo</button>
+          <button type="button" class="btn btn-small btn-secondary" id="clear">Clear</button>
+        </div>
+      </div>
+      <div class="draw-wrap">
+        <canvas id="guide-canvas" aria-hidden="true"></canvas>
+        <canvas id="draw-canvas" aria-label="Drawing area"></canvas>
+      </div>
+      <div class="tool-row under">
+        <label class="guide-pick">Guide shape
+          <select id="guide">
+            <option value="none">None</option>
+            <option value="round" selected>Round balloon</option>
+            <option value="tall">Tall balloon</option>
+            <option value="heart">Heart</option>
+          </select>
+        </label>
+      </div>
+      <p class="hint">The faint guide shape is only there to help. It won't appear in your balloon.</p>
+      <div class="actions">
+        <button class="btn btn-secondary" type="button" data-go="choose">Back</button>
+        <button class="btn" type="button" id="draw-done">I'm finished</button>
+      </div>
+    </section>
+
+    <!-- Step 3: preview + details -->
+    <section class="card" id="step-preview" hidden>
+      <h2>Here's your balloon!</h2>
+      <div class="preview-sky" id="preview-sky">
+        <div class="cloud c1"></div><div class="cloud c2"></div>
+        <canvas id="preview-canvas"></canvas>
+      </div>
+      <div id="photo-controls">
+        <p class="hint" id="tap-hint">Tip: tap a white gap (like the space between the ropes) to make it see-through, and tap again to fill it back in.</p>
+        <label class="slider">
+          <span>Cleanup strength</span>
+          <input type="range" id="strength" min="0" max="100" value="50">
+          <span class="slider-ends"><span>Keep faint marks</span><span>Remove more</span></span>
+        </label>
+        <button class="btn btn-secondary btn-small" type="button" data-go="crop">Redo crop</button>
+      </div>
+      <div id="draw-controls" hidden>
+        <button class="btn btn-secondary btn-small" type="button" data-go="draw">Keep drawing</button>
+      </div>
+
+      <form id="details" novalidate>
+        <label class="field">
+          <span>Your name <em>(required)</em></span>
+          <input type="text" id="name" name="name" maxlength="60" autocomplete="name" required>
+        </label>
+        <label class="field">
+          <span>A note to Sop and Bop <em>(optional)</em></span>
+          <textarea id="note" name="note" maxlength="280" rows="4"></textarea>
+          <span class="count"><span id="note-count">0</span> / 280</span>
+        </label>
+        <p class="error" id="form-error" role="alert" hidden></p>
+        <button class="btn btn-big" type="submit" id="submit">Send my balloon 🎈</button>
+      </form>
+    </section>
+
+    <!-- Step 4: thanks -->
+    <section class="card thanks" id="step-thanks" hidden>
+      <h2>Thank you, <span id="thanks-name"></span>!</h2>
+      <div class="thanks-balloon"><img id="thanks-img" alt="Your balloon"></div>
+      <p class="big">The parade takes off on <strong>Friday 16 October</strong>.</p>
+      <p>Look out for the QR code in the wedding paper.</p>
+      <button class="btn btn-secondary" type="button" id="another">Make another balloon</button>
+    </section>
+
+    <section class="card help" id="help">
+      <h2>Having trouble?</h2>
+      <p>No problem at all. Send your photo, your name and your note to us on WhatsApp and we'll add your balloon for you.</p>
+      <div class="phone">
+        <span class="number" id="wa-number"></span>
+        <button class="btn btn-small btn-secondary" type="button" id="copy-number">Copy number</button>
+      </div>
+      <p class="small">International: <span id="wa-intl"></span></p>
+      <a class="btn btn-whatsapp" id="wa-link" href="#" target="_blank" rel="noopener">Open WhatsApp</a>
+    </section>
+
+    <footer class="foot">Made with love for Sophie &amp; Ben</footer>
+  </main>
+
+  <div class="busy" id="busy" hidden><div class="busy-balloon" aria-hidden="true">🎈</div><p id="busy-text">Working…</p></div>
+
+  <script src="config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/cleanup.js"></script>
+  <script src="js/draw.js"></script>
+  <script src="js/make.js"></script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+node_modules/
+.netlify/
+supabase/.temp/
+tests/out/
+.DS_Store

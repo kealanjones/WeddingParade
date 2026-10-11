@@ -1,0 +1,41 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Cleanup test</title>
+<style>
+body{font-family:sans-serif;margin:0;background:#222;color:#fff}
+.row{display:flex;gap:8px;padding:8px;align-items:flex-start}
+.cell{width:300px} .cell canvas,.cell img{max-width:300px;max-height:400px;display:block}
+.sky{background:linear-gradient(#7ec8f0,#ffe3c2)} .check{background:repeating-conic-gradient(#ccc 0 25%,#fff 0 50%) 0 0/20px 20px}
+</style></head><body>
+<div id="out"></div>
+<script>window.PARADE_CONFIG={supabaseUrl:"",supabaseAnonKey:""};</script>
+<script src="../site/js/cleanup.js"></script>
+<script>
+const names = (new URLSearchParams(location.search).get("imgs") || "1-round.jpg,2-heart.jpg,3-tall.jpg,4-dark.jpg,5-round.jpg").split(",");
+const strength = Number(new URLSearchParams(location.search).get("s") || 0.5);
+(async () => {
+  const out = document.getElementById("out");
+  window.timings = [];
+  for (const n of names) {
+    const blob = await (await fetch("photos/" + n)).blob();
+    const file = new File([blob], n, { type: blob.type });
+    const photo = await Cleanup.loadPhoto(file);
+    let t = performance.now();
+    const crop = Cleanup.guessCrop(photo);
+    const tCrop = performance.now() - t; t = performance.now();
+    const res = Cleanup.process(photo, crop, strength);
+    window.timings.push({ n, crop: Math.round(tCrop), proc: Math.round(performance.now() - t), out: res && [res.canvas.width, res.canvas.height] });
+    const row = document.createElement("div"); row.className = "row";
+    const c1 = document.createElement("canvas"); c1.width = photo.width; c1.height = photo.height;
+    const x = c1.getContext("2d"); x.drawImage(photo, 0, 0); x.strokeStyle = "#f0f"; x.lineWidth = 8; x.strokeRect(crop.x, crop.y, crop.w, crop.h);
+    const a = document.createElement("div"); a.className = "cell"; a.append(c1, n);
+    row.append(a);
+    for (const cls of ["sky", "check"]) {
+      const d = document.createElement("div"); d.className = "cell " + cls;
+      if (res) { const im = new Image(); im.src = res.canvas.toDataURL(); d.append(im); } else d.textContent = "NULL";
+      row.append(d);
+    }
+    out.append(row);
+  }
+  window.done = true;
+})().catch(e => { document.body.append("ERR " + e.stack); window.done = true; });
+</script></body></html>

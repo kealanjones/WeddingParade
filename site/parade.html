@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>The Balloon Parade · Sop and Bop</title>
+  <meta name="description" content="Sophie and Ben's wedding balloon parade.">
+  <meta name="theme-color" content="#8fd0f2">
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Shrikhand&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="parade">
+  <canvas id="sky" aria-label="Balloons drifting across the sky. Tap one to read its note."></canvas>
+
+  <div class="parade-title" id="parade-title">
+    <h1>Sop and Bop's <span>Balloon Parade</span></h1>
+  </div>
+  <p class="parade-hint" id="parade-hint" hidden>Tap a balloon to see who made it</p>
+
+  <div class="waiting" id="waiting" hidden>
+    <div class="waiting-card">
+      <svg class="waiting-balloon" viewBox="0 0 120 170" aria-hidden="true" focusable="false">
+        <path d="M60 6C28 6 8 30 8 58c0 30 26 52 40 66h24c14-14 40-36 40-66C112 30 92 6 60 6z" fill="#ef4f6b" stroke="#23304a" stroke-width="4"/>
+        <path d="M60 6c-14 10-20 32-20 52 0 26 8 50 12 66h16c4-16 12-40 12-66 0-20-6-42-20-52z" fill="#ffc234" stroke="#23304a" stroke-width="3"/>
+        <path d="M48 124l4 22M72 124l-4 22" stroke="#23304a" stroke-width="3"/>
+        <rect x="46" y="144" width="28" height="20" rx="3" fill="#b07a42" stroke="#23304a" stroke-width="3"/>
+      </svg>
+      <h1>Sop and Bop's <span>Wedding Balloon Parade</span></h1>
+      <p class="big">The parade takes off on <strong id="launch-date">Friday 16 October</strong></p>
+      <p class="waiting-count" id="waiting-count" aria-live="polite"></p>
+      <p><a href="index.html" class="btn">Make a balloon</a></p>
+    </div>
+  </div>
+
+  <div class="note-card" id="note-card" role="dialog" aria-modal="false" aria-labelledby="note-name" hidden>
+    <button class="note-close" id="note-close" type="button" aria-label="Close">×</button>
+    <img id="note-img" alt="">
+    <div>
+      <p class="note-from">A balloon from</p>
+      <h2 id="note-name"></h2>
+      <p id="note-text"></p>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/parade.js"></script>
+</body>
+</html>
