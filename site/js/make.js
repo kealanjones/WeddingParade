@@ -14,8 +14,18 @@
   };
   let pad = null;
 
+  const stepNumber = { choose: 1, crop: 1, draw: 1, preview: 2, thanks: 4 };
   function show(step) {
     for (const s of steps) $("step-" + s).hidden = s !== step;
+    const n = stepNumber[step];
+    document.querySelectorAll("#stepper li").forEach((li) => {
+      const k = Number(li.dataset.n);
+      li.classList.toggle("on", k === n);
+      li.classList.toggle("done", k < n);
+      if (k === n) li.setAttribute("aria-current", "step");
+      else li.removeAttribute("aria-current");
+    });
+    if (step !== "preview") setCompare(false);
     const el = $("step-" + step);
     el.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
     if (step === "crop") requestAnimationFrame(layoutCrop);
@@ -38,6 +48,9 @@
   document.querySelectorAll("[data-go]").forEach((b) =>
     b.addEventListener("click", () => show(b.dataset.go))
   );
+
+  // Remember the guest's name for a second balloon (this browser only).
+  try { $("name").value = localStorage.getItem("parade-name") || ""; } catch (e) {}
 
   // ---------- WhatsApp plan B ----------
   $("wa-number").textContent = cfg.whatsappDisplay;
@@ -67,18 +80,52 @@
     busy("Opening your photo…");
     await nextFrame();
     try {
-      state.photo = await Cleanup.loadPhoto(file);
-      state.crop = Cleanup.guessCrop(state.photo);
-      const c = $("crop-canvas");
-      c.width = state.photo.width;
-      c.height = state.photo.height;
-      c.getContext("2d").drawImage(state.photo, 0, 0);
+      setPhoto(await Cleanup.loadPhoto(file));
+      state.dark = brightness(state.photo) < 0.33;
       busy(null);
       show("crop");
     } catch (err) {
       busy(null);
       notice(err.message + " If it keeps happening, send the photo to us on WhatsApp (details at the bottom of the page).");
     }
+  });
+
+  function setPhoto(photo) {
+    state.photo = photo;
+    state.crop = Cleanup.guessCrop(photo);
+    const c = $("crop-canvas");
+    c.width = photo.width;
+    c.height = photo.height;
+    c.getContext("2d").drawImage(photo, 0, 0);
+  }
+
+  // Average brightness 0..1, from a small copy of the photo.
+  function brightness(photo) {
+    const c = document.createElement("canvas");
+    c.width = 64;
+    c.height = 64;
+    const g = c.getContext("2d", { willReadFrequently: true });
+    g.drawImage(photo, 0, 0, 64, 64);
+    const d = g.getImageData(0, 0, 64, 64).data;
+    let sum = 0;
+    for (let i = 0; i < d.length; i += 4) sum += d[i] * 0.3 + d[i + 1] * 0.59 + d[i + 2] * 0.11;
+    return sum / (64 * 64 * 255);
+  }
+
+  $("rotate").addEventListener("click", () => {
+    const src = state.photo, c = document.createElement("canvas");
+    c.width = src.height;
+    c.height = src.width;
+    const g = c.getContext("2d");
+    g.translate(c.width, 0);
+    g.rotate(Math.PI / 2);
+    g.drawImage(src, 0, 0);
+    setPhoto(c);
+    requestAnimationFrame(layoutCrop);
+  });
+  $("whole").addEventListener("click", () => {
+    state.crop = { x: 0, y: 0, w: state.photo.width, h: state.photo.height };
+    layoutCrop();
   });
 
   // crop box, kept in photo pixel coordinates
@@ -131,12 +178,44 @@
     const strength = Number($("strength").value) / 100;
     state.result = Cleanup.process(state.photo, state.crop, strength);
     if (!state.result) {
-      notice("We couldn't find a drawing in that box. Try moving the corners, or lowering the cleanup strength.");
+      notice("We couldn't find a drawing in that box. Try moving the corners closer to your balloon.");
       return false;
     }
+    setCompare(false);
     paintPreview(state.result.canvas);
+    const cov = state.result.coverage;
+    qualityHint(
+      cov > 0.85 ? "Some of the paper or background may have been kept. Try moving the box closer to your drawing, or tidying up more (under \u201cNot quite right?\u201d below)."
+      : cov < 0.03 ? "We only found a small part of your drawing. Try keeping more of it (under \u201cNot quite right?\u201d below), or a photo with a darker outline."
+      : state.dark ? "Your photo is quite dark. If the balloon looks patchy, try another photo in brighter light, near a window."
+      : null
+    );
     return true;
   }
+
+  function qualityHint(msg) {
+    $("quality-hint").textContent = msg || "";
+    $("quality-hint").hidden = !msg;
+  }
+
+  // Before/after: swap the preview between the cut-out and the original photo.
+  let comparing = false;
+  function setCompare(on) {
+    comparing = on;
+    const btn = $("compare");
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+    btn.textContent = on ? "Show my balloon" : "Show my photo";
+    if (!state.result) return;
+    if (!on) return paintPreview(state.result.canvas);
+    const { x, y, w, h } = state.crop;
+    const k = Math.min(1, 800 / Math.max(w, h));
+    const c = document.createElement("canvas");
+    c.width = Math.round(w * k);
+    c.height = Math.round(h * k);
+    c.getContext("2d").drawImage(state.photo, x, y, w, h, 0, 0, c.width, c.height);
+    paintPreview(c);
+  }
+  $("compare").addEventListener("click", () => setCompare(!comparing));
 
   $("crop-done").addEventListener("click", async () => {
     busy("Cutting out your balloon…");
@@ -169,7 +248,7 @@
   }
 
   $("preview-canvas").addEventListener("click", (e) => {
-    if (state.source !== "photo" || !state.result) return;
+    if (state.source !== "photo" || !state.result || comparing) return;
     const c = $("preview-canvas"), r = c.getBoundingClientRect();
     const x = ((e.clientX - r.left) / r.width) * c.width;
     const y = ((e.clientY - r.top) / r.height) * c.height;
@@ -189,6 +268,7 @@
     state.drawn = Cleanup.solidifyDrawing(pad.canvas);
     if (!state.drawn) return;
     state.source = "drawn";
+    qualityHint(null);
     paintPreview(state.drawn);
     $("photo-controls").hidden = true;
     $("draw-controls").hidden = false;
@@ -232,6 +312,7 @@
       if (cfg.supabaseUrl.includes("YOUR-PROJECT")) throw new Error("The site isn't connected to its database yet.");
       const blob = await Cleanup.toPngBlob(canvas);
       await ParadeApi.submitBalloon({ blob, name, note, source: state.source });
+      try { localStorage.setItem("parade-name", name); } catch (e) {}
       $("thanks-name").textContent = name;
       $("thanks-img").src = URL.createObjectURL(blob);
       show("thanks");
@@ -249,6 +330,7 @@
     $("note").value = "";
     $("note-count").textContent = "0";
     $("strength").value = 50;
+    $("fix").open = false;
     show("choose");
   });
 })();

@@ -598,8 +598,12 @@
     const state = { W, H, flat, ink, r, finalMask, holeLabels, clearHoles: ropeGaps(finalMask, holes, W, H) };
     const out = render(state);
     if (!out) return null;
+    let kept = 0;
+    for (let p = 0; p < W * H; p++) kept += finalMask[p];
     return {
       canvas: out,
+      // share of the crop box kept as balloon (near 1 = background leaked in)
+      coverage: kept / (W * H),
       // x, y in output-canvas pixels. Returns true if something changed.
       toggleAt(x, y) {
         const v = state.view;

@@ -92,13 +92,20 @@ try {
     await page.mouse.down();
     await page.mouse.move(h.x + h.width / 2 + 6, h.y + h.height / 2 + 10, { steps: 4 });
     await page.mouse.up();
+    for (let i = 0; i < 4; i++) await page.click("#rotate");
     await page.click("#crop-done");
     await page.waitForSelector("#step-preview:not([hidden])");
     await page.waitForTimeout(400);
     await shot(page, "03-preview-phone.png", false);
-    // slider and a tap on the preview should not break anything
+    // before/after, the fix-it panel and its slider should not break anything
+    await page.click("#compare");
+    await page.waitForTimeout(200);
+    await shot(page, "03b-compare-phone.png", false);
+    await page.click("#compare");
+    await page.click("#fix summary");
     await page.locator("#strength").fill("70");
     await page.waitForTimeout(800);
+    await shot(page, "03c-fix-phone.png", false);
     await page.fill("#name", `Test Photo ${stamp}`);
     await page.fill("#note", "Congratulations Sop and Bop! Wishing you a lifetime of adventures together.");
     await page.click("#submit");
@@ -181,7 +188,7 @@ try {
     for (const r of db.rows) r.approved = true;
     // a crowd, to check the parade with many guests
     const imgs = [...db.files.values()];
-    for (let i = 0; i < 40; i++) {
+    for (let i = 0; i < 28; i++) {
       const id = `00000000-0000-4000-8000-${String(i).padStart(12, "0")}`;
       db.files.set(id + ".png", imgs[i % imgs.length]);
       db.rows.push({ id, name: `Guest ${i + 1}`, note: i % 3 ? "Love you both!" : null, image_path: id + ".png", approved: true });
@@ -196,8 +203,13 @@ try {
   for (const [name, vp] of [["tv", { width: 1920, height: 1080 }], ["phone", phone]]) {
     const page = await newPage(vp);
     await page.goto(`http://127.0.0.1:${PORT}/parade.html`);
-    await page.waitForTimeout(3500);
-    await shot(page, `08-parade-${name}.png`, false);
+    // the lift-off: stuck on the drawers, peeling, rising, then drifting
+    let elapsed = 0;
+    for (const at of [1500, 3200, 6000, 14000]) {
+      await page.waitForTimeout(at - elapsed);
+      elapsed = at;
+      await shot(page, `08-parade-${name}-${at}ms.png`, false);
+    }
     // tap the nearest balloon we can find
     const hit = await page.evaluate(() => {
       const c = document.getElementById("sky");

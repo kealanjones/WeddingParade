@@ -47,12 +47,18 @@
         <g fill="#7a4a22"><circle cx="100" cy="44" r="3"/><circle cx="118" cy="82" r="3"/><circle cx="86" cy="120" r="3"/></g>
         <rect x="26" y="144" width="12" height="16" fill="#7a4a22"/><rect x="162" y="144" width="12" height="16" fill="#7a4a22"/>
       </svg>
-      <div>
+      <div class="story-text">
         <h2>A balloon from every visitor</h2>
-        <p>At home, Sop and Bop have a chest of drawers that every visitor paints a hot-air balloon on. Each one is a little memento, and the chest keeps on growing.</p>
-        <p>For the wedding we're taking the tradition into the sky. <strong>Draw a balloon, any shape you like</strong>, and it will float in a parade alongside everyone else's.</p>
+        <p>Everyone who visits Sop and Bop paints a hot-air balloon on their chest of drawers. For the wedding, the balloons are taking to the sky.</p>
+        <p><strong>Draw one, any shape you like</strong>, and on the big day it will peel off the drawers and float over the bridge with everyone else's.</p>
       </div>
     </section>
+
+    <ol class="stepper" id="stepper" aria-label="Progress">
+      <li data-n="1" class="on"><span>1</span> Draw it</li>
+      <li data-n="2"><span>2</span> Check it</li>
+      <li data-n="3"><span>3</span> Send it</li>
+    </ol>
 
     <!-- Step 1: choose how -->
     <section class="card" id="step-choose">
@@ -83,14 +89,18 @@
 
     <!-- Step 2a: crop -->
     <section class="card" id="step-crop" hidden>
-      <h2>Frame your balloon</h2>
-      <p>Drag the corners so the box fits snugly around your drawing.</p>
+      <h2>Fit the box around your balloon</h2>
+      <p>We've guessed where your drawing is. Drag the corners if it needs a nudge.</p>
       <div class="crop-wrap" id="crop-wrap">
         <canvas id="crop-canvas"></canvas>
         <div class="crop-box" id="crop-box">
           <span class="handle" data-h="nw"></span><span class="handle" data-h="ne"></span>
           <span class="handle" data-h="sw"></span><span class="handle" data-h="se"></span>
         </div>
+      </div>
+      <div class="crop-tools">
+        <button class="btn btn-small btn-secondary" type="button" id="rotate">↻ Rotate</button>
+        <button class="btn btn-small btn-secondary" type="button" id="whole">Whole photo</button>
       </div>
       <div class="actions">
         <button class="btn btn-secondary" type="button" data-go="choose">Back</button>
@@ -142,18 +152,26 @@
     <!-- Step 3: preview + details -->
     <section class="card" id="step-preview" hidden>
       <h2>Here's your balloon!</h2>
+      <p class="preview-lead">This is how it will look in the parade.</p>
       <div class="preview-sky" id="preview-sky">
         <div class="cloud c1"></div><div class="cloud c2"></div>
         <canvas id="preview-canvas"></canvas>
       </div>
+      <p class="quality-hint" id="quality-hint" hidden></p>
       <div id="photo-controls">
-        <p class="hint" id="tap-hint">Tip: tap a white gap (like the space between the ropes) to make it see-through, and tap again to fill it back in.</p>
-        <label class="slider">
-          <span>Cleanup strength</span>
-          <input type="range" id="strength" min="0" max="100" value="50">
-          <span class="slider-ends"><span>Keep faint marks</span><span>Remove more</span></span>
-        </label>
-        <button class="btn btn-secondary btn-small" type="button" data-go="crop">Redo crop</button>
+        <button class="btn btn-small btn-secondary" type="button" id="compare" aria-pressed="false">Show my photo</button>
+        <details class="fix" id="fix">
+          <summary>Not quite right? Fix it here</summary>
+          <div class="fix-body">
+            <p class="hint">Tap a white gap (like the space between the ropes) to make it see-through. Tap it again to fill it back in.</p>
+            <label class="slider">
+              <span>How much to tidy up</span>
+              <input type="range" id="strength" min="0" max="100" value="50">
+              <span class="slider-ends"><span>Keep more of my drawing</span><span>Remove more marks</span></span>
+            </label>
+            <button class="btn btn-secondary btn-small" type="button" data-go="crop">Move the box again</button>
+          </div>
+        </details>
       </div>
       <div id="draw-controls" hidden>
         <button class="btn btn-secondary btn-small" type="button" data-go="draw">Keep drawing</button>
@@ -178,8 +196,8 @@
     <section class="card thanks" id="step-thanks" hidden>
       <h2>Thank you, <span id="thanks-name"></span>!</h2>
       <div class="thanks-balloon"><img id="thanks-img" alt="Your balloon"></div>
-      <p class="big">The parade takes off on <strong>Friday 16 October</strong>.</p>
-      <p>Look out for the QR code in the wedding paper.</p>
+      <p class="big">Your balloon is on the drawers, waiting for <strong>Friday 16 October</strong>.</p>
+      <p>On the day it will peel off and join the parade. Look out for the QR code in the wedding paper to watch it fly.</p>
       <button class="btn btn-secondary" type="button" id="another">Make another balloon</button>
     </section>
 
