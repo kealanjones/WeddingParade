@@ -1,4 +1,4 @@
-node_modules/
+node_modules
 .netlify/
 supabase/.temp/
 tests/out/
