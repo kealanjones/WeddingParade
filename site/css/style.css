@@ -289,3 +289,4 @@ body.parade {
   box-shadow: 0 14px 40px rgba(35, 48, 74, 0.35); font-size: 1.1rem;
 }
 .notice p { margin: 0; flex: 1; min-width: 0; }
+.error-detail { display: block; margin-top: 8px; font-weight: 400; font-size: 0.85rem; color: var(--ink-soft); overflow-wrap: anywhere; user-select: all; -webkit-user-select: all; }

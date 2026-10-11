@@ -198,9 +198,16 @@
   // ---------- details & submit ----------
   $("note").addEventListener("input", () => ($("note-count").textContent = $("note").value.length));
 
-  function formError(msg) {
+  function formError(msg, detail) {
     const el = $("form-error");
     el.textContent = msg || "";
+    if (detail) {
+      // Small print so the couple can tell us what actually went wrong.
+      const small = document.createElement("small");
+      small.className = "error-detail";
+      small.textContent = "Details: " + detail;
+      el.appendChild(small);
+    }
     el.hidden = !msg;
   }
 
@@ -230,7 +237,7 @@
       show("thanks");
     } catch (err) {
       console.error(err);
-      formError("Sorry, something went wrong sending your balloon. Please check your internet connection and try again. If it still won't send, use the WhatsApp option below.");
+      formError("Sorry, something went wrong sending your balloon. Please check your internet connection and try again. If it still won't send, use the WhatsApp option below.", err.message);
     } finally {
       busy(null);
       $("submit").disabled = false;
