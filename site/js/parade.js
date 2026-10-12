@@ -971,7 +971,12 @@
       // where it leaves through the open sash (room coordinates)
       b.exit = { x: r.x + r.w * (0.22 + Math.random() * 0.56), y: r.y + r.h * (0.35 + Math.random() * 0.3) };
       b.bend = (Math.random() - 0.5) * room.chest.w * 0.5;
-      b.target = { x: W * (0.1 + Math.random() * 0.8), y: H * (0.06 + Math.random() * 0.6) };
+      // spread out across the middle of the sky, so they are all in view (with
+      // room to rise) when the camera arrives at the wide landscape
+      b.target = {
+        x: W * (0.1 + ((i * 0.618034 + Math.random() * 0.15) % 1) * 0.8),
+        y: H * (0.3 + ((i * 0.381966 + Math.random() * 0.15) % 1) * 0.42),
+      };
     });
   }
 
@@ -1016,7 +1021,8 @@
       const d = DEPTHS[b.depth];
       b.y -= d.speed * b.speedJitter * dt;
       if (b.y * H + b.h < -10) {
-        b.y = 1 + Math.random() * 0.5 + 10 / H;
+        // come straight back in from the bottom
+        b.y = 1 + Math.random() * 0.08 + 10 / H;
         b.x = Math.random();
       }
     }
