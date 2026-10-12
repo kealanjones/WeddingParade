@@ -66,7 +66,7 @@ async function fakeSupabase(context) {
 }
 
 async function newPage(viewport, opts = {}) {
-  const context = await browser.newContext({ viewport, deviceScaleFactor: opts.dpr || 1, hasTouch: !!opts.touch, reducedMotion: opts.reduced ? "reduce" : "no-preference" });
+  const context = await browser.newContext({ viewport, deviceScaleFactor: opts.dpr || 1, hasTouch: !!opts.touch, isMobile: !!opts.touch, reducedMotion: opts.reduced ? "reduce" : "no-preference" });
   if (!live) await fakeSupabase(context);
   const page = await context.newPage();
   page.on("pageerror", (e) => console.log("pageerror:", e.message));
@@ -125,7 +125,7 @@ try {
   if (!live) {
     const page = await newPage(phone, { touch: true });
     await page.goto(`http://127.0.0.1:${PORT}/index.html`);
-    await page.setInputFiles("#photo-input", path.join(root, "tests/photos/3-tall.jpg"));
+    await page.setInputFiles("#camera-input", path.join(root, "tests/photos/3-tall.jpg")); // the "Take a photo now" route
     await page.waitForSelector("#step-crop:not([hidden])");
     await page.click("#crop-done");
     await page.waitForSelector("#step-preview:not([hidden])");

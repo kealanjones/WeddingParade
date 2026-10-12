@@ -119,7 +119,7 @@
   });
 
   // ---------- photo route ----------
-  $("photo-input").addEventListener("change", async (e) => {
+  async function onPhoto(e) {
     const file = e.target.files && e.target.files[0];
     e.target.value = "";
     if (!file) return;
@@ -134,7 +134,11 @@
       busy(null);
       notice(err.message + " If it keeps happening, send the photo to us on WhatsApp (details at the bottom of the page).");
     }
-  });
+  }
+  // Phones and tablets get a "Take a photo now" button that opens the camera.
+  if (navigator.maxTouchPoints > 0 || matchMedia("(pointer: coarse)").matches) document.body.classList.add("has-camera");
+  $("photo-input").addEventListener("change", onPhoto);
+  $("camera-input").addEventListener("change", onPhoto);
 
   function setPhoto(photo) {
     state.photo = photo;

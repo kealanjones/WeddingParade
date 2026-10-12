@@ -98,7 +98,15 @@
               <li>Plain paper, in good light</li>
               <li>Take the photo from straight above</li>
             </ul>
-            <label class="btn btn-primary btn-wide" for="photo-input">Choose a photo</label>
+            <div class="photo-buttons">
+              <!-- phones: open the camera straight away, or pick from the photo library -->
+              <label class="btn btn-primary btn-wide camera-only" for="camera-input">
+                <svg class="btn-icon" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M5 10.5h5l2.2-3.5h7.6l2.2 3.5h5v15H5z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="16" cy="17.5" r="5" fill="none" stroke="currentColor" stroke-width="2.2"/></svg>
+                Take a photo now
+              </label>
+              <label class="btn btn-wide photo-pick" for="photo-input">Choose from my photos</label>
+            </div>
+            <input type="file" id="camera-input" accept="image/*" capture="environment" class="visually-hidden">
             <input type="file" id="photo-input" accept="image/*,.heic,.heif" class="visually-hidden">
           </div>
           <div class="route">
