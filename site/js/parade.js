@@ -56,6 +56,10 @@
   let loadingImages = 0;
   let introTimer = 0;
 
+  // Sop and Bop, framed on top of the chest.
+  const couple = new Image();
+  couple.src = "img/couple.jpg";
+
   // ---------- small helpers ----------
 
   const lerp = (a, b, t) => a + (b - a) * t;
@@ -740,30 +744,45 @@
     const topY = c.y - c.top * 0.3;
     const u = c.h;
     // frame
-    // kept to the ends of the chest so the window stays clear
-    const fw = u * 0.22, fh = u * 0.27;
-    const fx = c.x + c.w * 0.05, fy = topY - fh;
+    // Sop and Bop's photo in a brass frame, kept to the end of the chest so
+    // the window stays clear
+    const fw = u * 0.3, fh = u * 0.38;
+    const fx = c.x + c.w * 0.03, fy = topY - fh;
     g.save();
     g.translate(fx + fw / 2, topY);
-    g.rotate(-0.05);
+    g.rotate(-0.04);
     g.translate(-(fx + fw / 2), -topY);
-    g.fillStyle = "rgba(60, 30, 10, 0.25)";
-    g.fillRect(fx + fw * 0.08, fy + fh * 0.06, fw, fh);
-    g.fillStyle = "#c9a24a";
+    g.fillStyle = "rgba(40, 30, 20, 0.25)";
+    g.fillRect(fx + fw * 0.07, fy + fh * 0.05, fw, fh);
+    const brass = g.createLinearGradient(fx, fy, fx + fw, fy + fh);
+    brass.addColorStop(0, "#e2c06a");
+    brass.addColorStop(0.5, "#c49a3c");
+    brass.addColorStop(1, "#a37d2c");
+    g.fillStyle = brass;
     g.fillRect(fx, fy, fw, fh);
+    g.strokeStyle = "rgba(90, 60, 15, 0.5)";
+    g.lineWidth = Math.max(1, fw * 0.015);
+    g.strokeRect(fx + fw * 0.06, fy + fh * 0.05, fw * 0.88, fh * 0.9);
     g.fillStyle = "#fffaf0";
-    g.fillRect(fx + fw * 0.1, fy + fh * 0.09, fw * 0.8, fh * 0.82);
-    const pic = g.createLinearGradient(0, fy + fh * 0.16, 0, fy + fh * 0.84);
-    pic.addColorStop(0, "#8fd0f2");
-    pic.addColorStop(1, "#ffe3c2");
-    g.fillStyle = pic;
-    g.fillRect(fx + fw * 0.18, fy + fh * 0.16, fw * 0.64, fh * 0.68);
-    const hx = fx + fw / 2, hy = fy + fh * 0.48, hs = fw * 0.13;
-    g.fillStyle = "#ef4f6b";
+    g.fillRect(fx + fw * 0.08, fy + fh * 0.065, fw * 0.84, fh * 0.87);
+    const px0 = fx + fw * 0.13, py0 = fy + fh * 0.1, pw0 = fw * 0.74, ph0 = fh * 0.8;
+    if (couple.complete && couple.naturalWidth) {
+      // cover-fit the photo into the mount
+      const k = Math.max(pw0 / couple.naturalWidth, ph0 / couple.naturalHeight);
+      const sw = pw0 / k, sh = ph0 / k;
+      g.drawImage(couple, (couple.naturalWidth - sw) / 2, (couple.naturalHeight - sh) * 0.3, sw, sh, px0, py0, pw0, ph0);
+    } else {
+      g.fillStyle = "#cfe6f3";
+      g.fillRect(px0, py0, pw0, ph0);
+    }
+    // a little glare on the glass
+    g.fillStyle = "rgba(255, 255, 255, 0.16)";
     g.beginPath();
-    g.moveTo(hx, hy + hs * 0.9);
-    g.bezierCurveTo(hx - hs * 1.6, hy - hs * 0.2, hx - hs * 0.6, hy - hs * 1.3, hx, hy - hs * 0.4);
-    g.bezierCurveTo(hx + hs * 0.6, hy - hs * 1.3, hx + hs * 1.6, hy - hs * 0.2, hx, hy + hs * 0.9);
+    g.moveTo(px0, py0 + ph0 * 0.55);
+    g.lineTo(px0 + pw0 * 0.55, py0);
+    g.lineTo(px0 + pw0 * 0.8, py0);
+    g.lineTo(px0, py0 + ph0 * 0.85);
+    g.closePath();
     g.fill();
     g.restore();
 
