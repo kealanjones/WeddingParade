@@ -11,6 +11,8 @@
     result: null, // cleanup result {canvas, toggleAt}
     drawn: null, // drawn balloon canvas
     source: null, // "photo" | "drawn"
+    pendingId: null, // keeps the same id across retries, so no duplicates
+    lastBlob: null, // the PNG last sent (for "Save a copy")
   };
   let pad = null;
 
@@ -48,6 +50,50 @@
   document.querySelectorAll("[data-go]").forEach((b) =>
     b.addEventListener("click", () => show(b.dataset.go))
   );
+
+  // ---------- never lose a balloon ----------
+  // Balloons are saved on this device before sending and removed only once
+  // Supabase has them. Anything left over is re-sent next time.
+  async function resendSaved() {
+    const saved = await Outbox.all();
+    if (!saved.length || cfg.supabaseUrl.includes("YOUR-PROJECT")) return;
+    let sent = 0;
+    for (const b of saved) {
+      try {
+        await ParadeApi.submitBalloon(b);
+        await Outbox.remove(b.id);
+        sent++;
+      } catch (e) {}
+    }
+    const note = $("outbox-note");
+    if (sent) {
+      note.textContent = sent === 1 ? "Good news: the balloon you made earlier has now been sent to Sop and Bop." : "Good news: the " + sent + " balloons you made earlier have now been sent to Sop and Bop.";
+      note.hidden = false;
+    }
+  }
+  resendSaved();
+  addEventListener("online", resendSaved);
+
+  function saveCopy(blob, name) {
+    if (!blob) return;
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "balloon-for-sop-and-bop" + (name ? "-" + name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") : "") + ".png";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+  }
+  $("save-copy").addEventListener("click", () => saveCopy(state.lastBlob, $("thanks-name").textContent));
+  $("save-copy-failed").addEventListener("click", () => saveCopy(state.lastBlob, $("name").value.trim()));
+  $("retry").addEventListener("click", () => $("details").requestSubmit());
+
+  // The balloon itself changed: a saved-but-unsent older version is dropped
+  // so it isn't sent as well.
+  function balloonChanged() {
+    if (state.pendingId) Outbox.remove(state.pendingId);
+    state.pendingId = null;
+  }
 
   // Remember the guest's name for a second balloon (this browser only).
   try { $("name").value = localStorage.getItem("parade-name") || ""; } catch (e) {}
@@ -181,6 +227,7 @@
       notice("We couldn't find a drawing in that box. Try moving the corners closer to your balloon.");
       return false;
     }
+    balloonChanged();
     setCompare(false);
     paintPreview(state.result.canvas);
     const cov = state.result.coverage;
@@ -252,7 +299,10 @@
     const c = $("preview-canvas"), r = c.getBoundingClientRect();
     const x = ((e.clientX - r.left) / r.width) * c.width;
     const y = ((e.clientY - r.top) / r.height) * c.height;
-    if (state.result.toggleAt(x, y)) paintPreview(state.result.canvas);
+    if (state.result.toggleAt(x, y)) {
+      balloonChanged();
+      paintPreview(state.result.canvas);
+    }
   });
 
   // ---------- draw route ----------
@@ -265,6 +315,7 @@
       notice("Draw your balloon first. Any shape you like!");
       return;
     }
+    balloonChanged();
     state.drawn = Cleanup.solidifyDrawing(pad.canvas);
     if (!state.drawn) return;
     state.source = "drawn";
@@ -305,20 +356,34 @@
       return;
     }
     formError(null);
+    $("failed-actions").hidden = true;
     const canvas = state.source === "photo" ? state.result.canvas : state.drawn;
     $("submit").disabled = true;
     busy("Sending your balloon…");
+    let balloon = null;
     try {
       if (cfg.supabaseUrl.includes("YOUR-PROJECT")) throw new Error("The site isn't connected to its database yet.");
       const blob = await Cleanup.toPngBlob(canvas);
-      await ParadeApi.submitBalloon({ blob, name, note, source: state.source });
-      try { localStorage.setItem("parade-name", name); } catch (e) {}
+      state.lastBlob = blob;
+      state.pendingId = state.pendingId || ParadeApi.newId();
+      balloon = { id: state.pendingId, blob, name, note, source: state.source };
+      await Outbox.put(balloon);
+      await ParadeApi.submitBalloon(balloon);
+      await Outbox.remove(balloon.id);
+      state.pendingId = null;
       $("thanks-name").textContent = name;
       $("thanks-img").src = URL.createObjectURL(blob);
       show("thanks");
     } catch (err) {
       console.error(err);
-      formError("Sorry, something went wrong sending your balloon. Please check your internet connection and try again. If it still won't send, use the WhatsApp option below.", err.message);
+      const kept = balloon && (await Outbox.all()).some((b) => b.id === balloon.id);
+      formError(
+        kept
+          ? "We couldn't send your balloon just now, but it's safely saved on this device and we'll send it automatically next time you open this page. You can also try again now, or save a copy and send it to us on WhatsApp (details below)."
+          : "Sorry, we couldn't send your balloon. Please check your internet connection and try again, or save a copy and send it to us on WhatsApp (details below).",
+        err.message
+      );
+      $("failed-actions").hidden = false;
     } finally {
       busy(null);
       $("submit").disabled = false;
@@ -327,6 +392,9 @@
 
   $("another").addEventListener("click", () => {
     state.photo = state.result = state.drawn = null;
+    state.pendingId = null;
+    $("failed-actions").hidden = true;
+    formError(null);
     $("note").value = "";
     $("note-count").textContent = "0";
     $("strength").value = 50;

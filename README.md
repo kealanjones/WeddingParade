@@ -52,6 +52,52 @@ the `approved` box on any row.
 **Balloons sent on WhatsApp:** make them yourself on the guest page (upload their
 photo, type their name and note) and they arrive like any other.
 
+## Backups: making sure no balloon is ever lost
+
+There are four layers, so any one of them failing doesn't lose anything:
+
+1. **On the guest's phone.** A balloon is saved on the device *before* it is sent and removed only once Supabase confirms it. If the signal drops, the page retries, and anything still unsent goes automatically the next time the guest opens the page. Guests can also tap **Save a copy** and send it on WhatsApp.
+2. **In the database.** Every balloon added, changed or deleted is also copied into a `balloons_archive` table. A mistaken `update` or `delete` can be undone (below).
+3. **Off-site, every 3 hours.** A GitHub Action copies every balloon (details and pictures) into the `backups` branch of this repository, **encrypted** with a passphrase only you know. The repository is public, so nothing readable goes there. A backup never forgets: if a balloon disappears from Supabase it stays in the backup, marked "missing_since". If a run fails, GitHub emails you.
+4. **By hand, any time.** In Supabase: **Table Editor -> balloons -> Export -> CSV**, and **Storage -> balloons**, select all, **Download**.
+
+### One-time setup (about 5 minutes)
+
+1. **Supabase, SQL Editor:** paste and run `supabase/migrations/20261012000000_balloons_archive.sql` (it's safe to run more than once).
+2. **Supabase, Project Settings -> API keys:** copy the **secret** key (or the legacy **service_role** key). Keep it private: it can read and change everything.
+3. **GitHub, this repository -> Settings -> Secrets and variables -> Actions -> New repository secret**, add two secrets:
+   - `SUPABASE_SERVICE_KEY`: the key from step 2
+   - `BACKUP_PASSPHRASE`: a long passphrase you make up. **Write it down somewhere safe.** Without it the backups can't be opened.
+4. **GitHub -> Actions -> "Back up balloons" -> Run workflow.** After a minute or so it should go green, and a `backups` branch appears. From then on it runs every 3 hours by itself.
+
+### Undo a mistaken delete or update (from the archive)
+
+In the SQL Editor:
+
+```sql
+-- put back any balloon that is no longer in the table, as it last was
+insert into balloons
+select (jsonb_populate_record(null::balloons, a.balloon)).*
+from (select distinct on (balloon->>'id') balloon from balloons_archive order by balloon->>'id', archive_id desc) a
+where not exists (select 1 from balloons b where b.id = (a.balloon->>'id')::uuid);
+```
+
+### Opening or restoring an off-site backup
+
+Needs Node.js. Download the `backups` branch (GitHub -> branch "backups" -> Code -> Download ZIP), unzip it, then:
+
+```sh
+# readable copies: balloons.csv, balloons.json and every picture
+BACKUP_PASSPHRASE='your passphrase' node scripts/decrypt-backup.mjs WeddingParade-backups readable-backup
+
+# put everything missing back into Supabase (works on a brand-new project too,
+# after running both files in supabase/migrations)
+SUPABASE_URL=https://xxxx.supabase.co SUPABASE_SERVICE_KEY=... BACKUP_PASSPHRASE='your passphrase' \
+  node scripts/restore.mjs WeddingParade-backups
+```
+
+You can also run a backup on your own computer: `SUPABASE_SERVICE_KEY=... BACKUP_PASSPHRASE=... node scripts/backup.mjs my-backup`.
+
 ## Changing the WhatsApp number (or other text)
 
 Edit `site/config.js`:
@@ -118,6 +164,7 @@ python3 tests/make_synthetic.py tests/photos
 node tests/run-cleanup-test.mjs out.png  # cut-outs of the synthetic photos
 node tests/e2e.mjs                       # both routes + parade, against a fake backend
 node tests/e2e.mjs --live                # the same against the real Supabase project
+node tests/backup-test.mjs               # backup, decrypt and restore against a fake Supabase
 ```
 
 Screenshots land in `tests/out/`.

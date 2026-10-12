@@ -1,0 +1,77 @@
+/* The parade page (with style.css for shared tokens and buttons). */
+body.parade {
+  overflow: hidden; height: 100vh; height: 100dvh;
+  background: linear-gradient(180deg, #7cc4ee 0%, #bfe6fb 45%, #ffe6c8 78%, #ffc49a 100%);
+}
+#sky { position: fixed; inset: 0; width: 100%; height: 100%; cursor: pointer; touch-action: manipulation; }
+
+.parade-title {
+  position: fixed; left: 50%; top: max(14px, env(safe-area-inset-top)); translate: -50% 0; z-index: 2;
+  pointer-events: none; text-align: center; width: max-content; max-width: 92vw; transition: opacity 1.5s;
+}
+.parade-title h1 {
+  font-size: clamp(1.5rem, 4.2vw, 3rem); color: var(--ink);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.9), 0 0 18px rgba(255, 255, 255, 0.85);
+}
+.parade-title .h1-top { color: var(--slate-deep); }
+.parade-title.faded { opacity: 0.4; }
+.parade-count {
+  display: inline-block; margin: 8px 0 0; padding: 2px 14px; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.8); font-weight: 600; font-size: clamp(0.95rem, 1.6vw, 1.25rem); color: var(--ink);
+}
+.parade-count:empty { display: none; }
+.parade-hint {
+  position: fixed; left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); translate: -50% 0; z-index: 2;
+  margin: 0; padding: 10px 20px; border-radius: 999px; background: rgba(255, 255, 255, 0.88);
+  font-weight: 600; pointer-events: none; transition: opacity 1s; white-space: nowrap;
+}
+.parade-hint.gone { opacity: 0; }
+
+.note-card {
+  position: fixed; z-index: 5; left: 50%; bottom: max(20px, env(safe-area-inset-bottom)); translate: -50% 0;
+  width: min(640px, calc(100vw - 32px)); display: grid; grid-template-columns: 96px 1fr; gap: 18px; align-items: center;
+  background: var(--card); border-radius: var(--radius); padding: 20px 24px; border: 1px solid var(--line);
+  box-shadow: 0 18px 50px rgba(38, 49, 58, 0.28); animation: card-in 0.45s ease-out;
+}
+.note-card img { width: 96px; max-height: 140px; object-fit: contain; }
+.note-card h2 { font-size: clamp(1.6rem, 3vw, 2.4rem); margin: 0 0 6px; overflow-wrap: anywhere; }
+.note-card #note-text { font-size: clamp(1.2rem, 2.2vw, 1.7rem); margin: 0; white-space: pre-line; overflow-wrap: anywhere; }
+.note-from { margin: 0; font-size: 0.95rem; color: var(--slate-deep); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+.note-close {
+  position: absolute; top: 6px; right: 8px; width: 48px; height: 48px; border: 0; background: transparent;
+  font-size: 2rem; line-height: 1; color: var(--ink-soft); cursor: pointer; border-radius: 50%;
+}
+.note-card.spotlight .note-close { display: none; }
+@media (min-width: 1200px) {
+  .note-card { width: 760px; grid-template-columns: 130px 1fr; padding: 26px 30px; }
+  .note-card img { width: 130px; max-height: 190px; }
+}
+@keyframes card-in { from { opacity: 0; transform: translateY(30px); } }
+
+.corner-btns { position: fixed; z-index: 3; right: 12px; top: max(12px, env(safe-area-inset-top)); display: flex; gap: 8px; }
+.corner-btn {
+  min-height: 44px; padding: 8px 16px; border: 0; border-radius: 999px; cursor: pointer;
+  background: rgba(255, 255, 255, 0.82); color: var(--ink); font: 600 1rem var(--body);
+  opacity: 0.6; transition: opacity 0.3s;
+}
+.corner-btn:hover, .corner-btn:focus-visible { opacity: 1; }
+@media (hover: none), (max-width: 760px) { #fullscreen { display: none !important; } }
+@media (max-width: 760px) { .corner-btns { top: auto; bottom: max(14px, env(safe-area-inset-bottom)); } }
+
+/* waiting card sits at the top so the room and the chest show below it */
+.waiting {
+  position: fixed; inset: 0; z-index: 4; display: flex; justify-content: center; align-items: flex-start;
+  padding: max(3vh, 12px) 16px 16px; pointer-events: none;
+}
+.waiting-card {
+  pointer-events: auto; text-align: center; max-width: 560px; background: rgba(255, 255, 255, 0.94);
+  border-radius: var(--radius); padding: 20px 24px; border: 1px solid var(--line); box-shadow: 0 18px 50px rgba(38, 49, 58, 0.18);
+}
+.waiting-card h1 { font-size: clamp(1.7rem, 4.6vw, 2.6rem); margin-bottom: 10px; }
+.waiting-card .big { margin-bottom: 4px; }
+.waiting-card p:last-child { margin-bottom: 0; }
+.waiting-count { font-weight: 600; color: var(--slate-deep); font-size: 1.2rem; min-height: 1.6em; }
+@media (min-width: 1000px) {
+  .waiting { justify-content: flex-start; padding-left: 4vw; padding-top: 6vh; }
+  .waiting-card { max-width: 30vw; }
+}

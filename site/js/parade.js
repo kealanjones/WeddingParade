@@ -556,7 +556,7 @@
     const { x, y, w, h } = c;
     const bottom = y + h;
     const lw = Math.max(1.5, w * 0.006);
-    const line = "#7a4a22";
+    const line = "#4f5b64"; // painted slate chest (#8996a0), darker edges
 
     // shadows: on the wall behind and on the floor beneath
     g.fillStyle = "rgba(90, 50, 25, 0.16)";
@@ -581,7 +581,7 @@
     const fh = c.feet, fw = w * 0.11;
     for (const left of [true, false]) {
       const fx = left ? x + w * 0.015 : x + w - fw - w * 0.015;
-      g.fillStyle = "#a8692f";
+      g.fillStyle = "#6f7c86";
       g.beginPath();
       g.moveTo(fx, bottom - fh);
       g.lineTo(fx + fw, bottom - fh);
@@ -600,23 +600,23 @@
     }
     // plinth
     const py = bottom - fh - c.plinth;
-    g.fillStyle = "#b9783a";
+    g.fillStyle = "#77848e";
     g.fillRect(x, py, w, c.plinth);
     g.strokeRect(x, py, w, c.plinth);
-    g.fillStyle = "rgba(255, 230, 190, 0.25)";
+    g.fillStyle = "rgba(255, 255, 255, 0.18)";
     g.fillRect(x, py, w, c.plinth * 0.25);
 
     // carcass
     const cy = y + c.top;
     const body = g.createLinearGradient(x, 0, x + w, 0);
-    body.addColorStop(0, "#c98a4b");
-    body.addColorStop(0.5, "#d9a062");
-    body.addColorStop(1, "#c4864a");
+    body.addColorStop(0, "#7f8c96");
+    body.addColorStop(0.5, "#8b98a2");
+    body.addColorStop(1, "#7c8993");
     g.fillStyle = body;
     g.fillRect(x + w * 0.012, cy, w * 0.976, py - cy);
     g.strokeRect(x + w * 0.012, cy, w * 0.976, py - cy);
     // reeded side pilasters
-    g.strokeStyle = "rgba(122, 74, 34, 0.35)";
+    g.strokeStyle = "rgba(60, 72, 82, 0.35)";
     g.lineWidth = lw * 0.6;
     for (const sx of [x + w * 0.012, x + w - c.side]) {
       for (let k = 1; k <= 2; k++) {
@@ -634,19 +634,19 @@
     const tx = x - c.over, tw = w + c.over * 2;
     g.lineWidth = lw;
     g.strokeStyle = line;
-    g.fillStyle = "#e7b67b";
+    g.fillStyle = "#a3aeb7";
     roundRect(g, tx, y - c.top * 0.35, tw, c.top * 0.55, c.top * 0.2);
     g.fill();
     g.stroke();
     const edge = g.createLinearGradient(0, y, 0, y + c.top);
-    edge.addColorStop(0, "#c88a4e");
-    edge.addColorStop(0.5, "#b47439");
-    edge.addColorStop(1, "#99602c");
+    edge.addColorStop(0, "#8794a0");
+    edge.addColorStop(0.5, "#76838d");
+    edge.addColorStop(1, "#65727c");
     g.fillStyle = edge;
     roundRect(g, tx, y + c.top * 0.15, tw, c.top * 0.85, c.top * 0.3);
     g.fill();
     g.stroke();
-    g.strokeStyle = "rgba(255, 225, 180, 0.45)";
+    g.strokeStyle = "rgba(255, 255, 255, 0.35)";
     g.lineWidth = lw * 0.7;
     g.beginPath();
     g.moveTo(tx + c.top * 0.3, y + c.top * 0.38);
@@ -657,22 +657,22 @@
   function drawer(g, d, i, lw) {
     const rand = rng(101 + i * 17);
     // dark gap around the drawer
-    g.fillStyle = "#6e4020";
+    g.fillStyle = "#47525b";
     roundRect(g, d.x - lw, d.y - lw, d.w + lw * 2, d.h + lw * 2, lw * 2);
     g.fill();
     // face
     const face = g.createLinearGradient(d.x, d.y, d.x, d.y + d.h);
-    face.addColorStop(0, "#efbd82");
-    face.addColorStop(1, "#dca56a");
+    face.addColorStop(0, "#98a5af");
+    face.addColorStop(1, "#8a97a1");
     g.fillStyle = face;
     roundRect(g, d.x, d.y, d.w, d.h, lw * 1.5);
     g.fill();
-    // wood grain
+    // wood grain, faint under the paint
     g.save();
     g.beginPath();
     g.rect(d.x, d.y, d.w, d.h);
     g.clip();
-    g.strokeStyle = "rgba(150, 90, 40, 0.16)";
+    g.strokeStyle = "rgba(55, 66, 76, 0.1)";
     g.lineWidth = Math.max(0.8, lw * 0.5);
     const lines = 6, segs = 4;
     for (let k = 0; k < lines; k++) {
@@ -691,20 +691,20 @@
     g.restore();
     // bevel: light top/left, shadow bottom/right
     g.lineWidth = Math.max(1, lw * 0.9);
-    g.strokeStyle = "rgba(255, 238, 205, 0.7)";
+    g.strokeStyle = "rgba(255, 255, 255, 0.45)";
     g.beginPath();
     g.moveTo(d.x + lw, d.y + d.h - lw);
     g.lineTo(d.x + lw, d.y + lw);
     g.lineTo(d.x + d.w - lw, d.y + lw);
     g.stroke();
-    g.strokeStyle = "rgba(110, 60, 25, 0.45)";
+    g.strokeStyle = "rgba(45, 55, 65, 0.4)";
     g.beginPath();
     g.moveTo(d.x + d.w - lw, d.y + lw);
     g.lineTo(d.x + d.w - lw, d.y + d.h - lw);
     g.lineTo(d.x + lw, d.y + d.h - lw);
     g.stroke();
     // moulded inner panel
-    g.strokeStyle = "rgba(140, 85, 40, 0.3)";
+    g.strokeStyle = "rgba(55, 66, 76, 0.28)";
     g.lineWidth = Math.max(0.8, lw * 0.5);
     roundRect(g, d.x + d.w * 0.025, d.y + d.h * 0.12, d.w * 0.95, d.h * 0.76, lw * 2);
     g.stroke();
@@ -807,9 +807,8 @@
         g.save();
         g.translate(s.x, s.y);
         g.rotate(b.tilt || 0);
-        g.globalCompositeOperation = "multiply";
         // still painted on, or a ghost of the painting once it has flown
-        g.globalAlpha = now < b.launchAt ? 0.95 : 0.16;
+        g.globalAlpha = now < b.launchAt ? 0.97 : 0.22;
         g.drawImage(b.img, -w / 2, -h / 2, w, h);
         g.restore();
       }
@@ -824,7 +823,6 @@
     const slots = computeSlots(n);
     const colours = ["#ef4f6b", "#ffc234", "#2f97d6", "#4fb873", "#8b5cf6", "#ff8fb8", "#ff7a3d"];
     g.save();
-    g.globalCompositeOperation = "multiply";
     for (let i = 0; i < n; i++) {
       const s = slots[i];
       const rr = s.size * 0.3;

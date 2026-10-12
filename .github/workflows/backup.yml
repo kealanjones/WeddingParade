@@ -1,0 +1,64 @@
+# Every 3 hours (and on demand from the Actions tab), copy every balloon from
+# Supabase into the "backups" branch of this repository, encrypted with the
+# BACKUP_PASSPHRASE secret. If a run fails, GitHub emails the repo owner.
+name: Back up balloons
+
+on:
+  schedule:
+    - cron: "17 */3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: balloon-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Check secrets are set
+        env:
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          [ -n "$SUPABASE_SERVICE_KEY" ] || { echo "::error::Add the SUPABASE_SERVICE_KEY secret (see README, Backups)"; exit 1; }
+          [ -n "$BACKUP_PASSPHRASE" ] || { echo "::error::Add the BACKUP_PASSPHRASE secret (see README, Backups)"; exit 1; }
+
+      - name: Get the existing backup
+        env:
+          REMOTE: https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git
+        run: |
+          if git ls-remote --exit-code --heads "$REMOTE" backups >/dev/null; then
+            git clone --quiet --depth 1 --branch backups "$REMOTE" backup-out
+          else
+            mkdir backup-out && git -C backup-out init --quiet -b backups && git -C backup-out remote add origin "$REMOTE"
+          fi
+
+      - name: Back up
+        env:
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: node scripts/backup.mjs backup-out
+
+      - name: Save to the backups branch
+        working-directory: backup-out
+        run: |
+          git config user.name "balloon-backup"
+          git config user.email "balloon-backup@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nothing new since the last backup."
+          else
+            git commit --quiet -m "Backup $(date -u +%Y-%m-%dT%H:%MZ)"
+            git push --quiet origin backups
+          fi

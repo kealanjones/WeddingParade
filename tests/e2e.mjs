@@ -21,7 +21,7 @@ await new Promise((r) => setTimeout(r, 800));
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM || undefined });
 
 // In-memory stand-in for Supabase REST + Storage.
-const db = { rows: [], files: new Map() };
+const db = { rows: [], files: new Map(), failRows: 0 };
 async function fakeSupabase(context) {
   await context.route(`http://127.0.0.1:${PORT}/config.js`, async (route) => {
     const res = await route.fetch();
@@ -40,13 +40,18 @@ async function fakeSupabase(context) {
       return f ? route.fulfill({ status: 200, headers: { ...cors, "content-type": "image/png" }, body: f }) : route.fulfill({ status: 404, headers: cors });
     }
     if (url.pathname.startsWith("/storage/v1/object/balloons/") && req.method() === "POST") {
-      db.files.set(url.pathname.split("/").pop(), req.postDataBuffer());
+      const name = url.pathname.split("/").pop();
+      // like real Supabase: a second upload to the same name is refused
+      if (db.files.has(name)) return route.fulfill({ status: 400, headers: cors, json: { statusCode: "409", error: "Duplicate", message: "The resource already exists" } });
+      db.files.set(name, req.postDataBuffer());
       fs.writeFileSync(path.join(out, `upload-${db.files.size}.png`), req.postDataBuffer());
       return route.fulfill({ status: 200, headers: cors, json: { Key: "ok" } });
     }
     if (url.pathname === "/rest/v1/balloons" && req.method() === "POST") {
       const row = JSON.parse(req.postData());
       if (row.approved !== undefined) return route.fulfill({ status: 401, headers: cors, body: "no" });
+      if (db.failRows > 0) { db.failRows--; return route.fulfill({ status: 503, headers: cors, body: "database unavailable" }); }
+      if (db.rows.some((r) => r.id === row.id)) return route.fulfill({ status: 409, headers: cors, json: { code: "23505", message: "duplicate key value violates unique constraint" } });
       db.rows.push({ ...row, approved: false, created_at: new Date().toISOString() });
       return route.fulfill({ status: 201, headers: cors, body: "" });
     }
@@ -113,6 +118,33 @@ try {
     await page.waitForTimeout(400);
     await shot(page, "04-thanks-phone.png", false);
     results.push("photo route submitted");
+    await page.context().close();
+  }
+
+  // ---- 1b. the database is down: the balloon is kept and sent next visit ----
+  if (!live) {
+    const page = await newPage(phone, { touch: true });
+    await page.goto(`http://127.0.0.1:${PORT}/index.html`);
+    await page.setInputFiles("#photo-input", path.join(root, "tests/photos/3-tall.jpg"));
+    await page.waitForSelector("#step-crop:not([hidden])");
+    await page.click("#crop-done");
+    await page.waitForSelector("#step-preview:not([hidden])");
+    await page.fill("#name", `Outage ${stamp}`);
+    const before = db.rows.length;
+    db.failRows = 3; // every attempt in this send fails
+    await page.click("#submit");
+    await page.waitForSelector("#failed-actions:not([hidden])", { timeout: 30000 });
+    await shot(page, "04b-send-failed-phone.png", false);
+    const kept = await page.evaluate(async () => (await Outbox.all()).length);
+    results.push(`outage: send failed, kept on device = ${kept}, rows added = ${db.rows.length - before}`);
+    // the guest comes back later: it goes through on its own, exactly once
+    await page.reload();
+    await page.waitForSelector("#outbox-note:not([hidden])", { timeout: 20000 });
+    await page.waitForTimeout(300);
+    const left = await page.evaluate(async () => (await Outbox.all()).length);
+    const mine = db.rows.filter((r) => r.name === `Outage ${stamp}`).length;
+    results.push(`outage: after revisit rows for guest = ${mine}, left on device = ${left}`);
+    if (mine !== 1 || left !== 0 || kept !== 1) throw new Error("outbox did not recover the balloon exactly once");
     await page.context().close();
   }
 

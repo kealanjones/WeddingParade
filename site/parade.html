@@ -5,18 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>The Balloon Parade · Sop and Bop</title>
   <meta name="description" content="Sophie and Ben's wedding balloon parade.">
-  <meta name="theme-color" content="#8fd0f2">
+  <meta name="theme-color" content="#7cc4ee">
   <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Shrikhand&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/parade.css">
 </head>
 <body class="parade">
   <canvas id="sky" aria-label="Balloons drifting across the sky. Tap one to read its note."></canvas>
 
   <div class="parade-title" id="parade-title">
-    <h1>Sop and Bop's <span>Balloon Parade</span></h1>
+    <h1><span class="h1-top">Sop and Bop's</span> Balloon Parade</h1>
     <p class="parade-count" id="parade-count"></p>
   </div>
   <div class="corner-btns">
@@ -27,10 +28,10 @@
 
   <div class="waiting" id="waiting" hidden>
     <div class="waiting-card">
-      <h1>Sop and Bop's <span>Wedding Balloon Parade</span></h1>
+      <h1><span class="h1-top">Sop and Bop's</span> Wedding Balloon Parade</h1>
       <p class="big">The parade takes off on <strong id="launch-date">Friday 16 October</strong></p>
       <p class="waiting-count" id="waiting-count" aria-live="polite"></p>
-      <p><a href="index.html" class="btn">Make a balloon</a></p>
+      <p><a href="index.html" class="btn btn-primary">Make a balloon</a></p>
     </div>
   </div>
 

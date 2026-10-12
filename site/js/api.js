@@ -28,26 +28,44 @@
     return h.slice(0, 8) + "-" + h.slice(8, 12) + "-" + h.slice(12, 16) + "-" + h.slice(16, 20) + "-" + h.slice(20);
   }
 
-  async function submitBalloon({ blob, name, note, source }) {
-    const id = newId();
+  // "Already there" from an earlier attempt counts as success, so a retry
+  // with the same id never makes a duplicate balloon.
+  async function alreadyThere(res) {
+    if (res.status !== 409 && res.status !== 400) return false;
+    const text = await res.clone().text().catch(() => "");
+    return /duplicate|already exists|23505/i.test(text);
+  }
+
+  async function sendOnce({ id, blob, name, note, source }) {
     const path = id + ".png";
-    await check(
-      await fetch(base + "/storage/v1/object/balloons/" + path, {
-        method: "POST",
-        headers: headers({ "Content-Type": "image/png", "x-upsert": "false" }),
-        body: blob,
-      }),
-      "Uploading your balloon"
-    );
-    await check(
-      await fetch(base + "/rest/v1/balloons", {
-        method: "POST",
-        headers: headers({ "Content-Type": "application/json", Prefer: "return=minimal" }),
-        body: JSON.stringify({ id, name, note: note || null, image_path: path, source }),
-      }),
-      "Saving your details"
-    );
+    const up = await fetch(base + "/storage/v1/object/balloons/" + path, {
+      method: "POST",
+      headers: headers({ "Content-Type": "image/png", "x-upsert": "false" }),
+      body: blob,
+    });
+    if (!(await alreadyThere(up))) await check(up, "Uploading your balloon");
+    const row = await fetch(base + "/rest/v1/balloons", {
+      method: "POST",
+      headers: headers({ "Content-Type": "application/json", Prefer: "return=minimal" }),
+      body: JSON.stringify({ id, name, note: note || null, image_path: path, source }),
+    });
+    if (!(await alreadyThere(row))) await check(row, "Saving your details");
     return { id, path };
+  }
+
+  // Tries a few times with a pause, for wobbly phone signal.
+  async function submitBalloon(balloon) {
+    const b = { ...balloon, id: balloon.id || newId() };
+    let lastErr;
+    for (const wait of [0, 1500, 4000]) {
+      if (wait) await new Promise((r) => setTimeout(r, wait));
+      try {
+        return await sendOnce(b);
+      } catch (err) {
+        lastErr = err;
+      }
+    }
+    throw lastErr;
   }
 
   async function approvedBalloons() {
@@ -76,5 +94,5 @@
     return base + "/storage/v1/object/public/balloons/" + encodeURIComponent(path);
   }
 
-  window.ParadeApi = { submitBalloon, approvedBalloons, balloonCount, imageUrl };
+  window.ParadeApi = { submitBalloon, approvedBalloons, balloonCount, imageUrl, newId };
 })();
