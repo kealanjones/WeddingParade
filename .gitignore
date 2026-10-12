@@ -3,3 +3,4 @@ node_modules
 supabase/.temp/
 tests/out/
 .DS_Store
+site.zip
