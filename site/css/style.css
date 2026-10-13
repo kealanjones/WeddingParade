@@ -82,6 +82,18 @@ h1 { font-size: clamp(2.3rem, 9vw, 3.6rem); line-height: 1.05; margin: 0; letter
   border-bottom-right-radius: 16px; transform: rotate(18deg);
 }
 .lead { max-width: 34em; margin: 10px auto 0; font-size: 1.15rem; color: var(--ink-soft); }
+.ask { list-style: none; counter-reset: ask; max-width: 27em; margin: 18px auto 0; padding: 0; display: grid; gap: 10px; text-align: left; }
+.ask li {
+  counter-increment: ask; position: relative; padding: 12px 14px 12px 58px; line-height: 1.4;
+  background: var(--card); border: 1px solid var(--line); border-radius: 14px; font-size: 1.05rem;
+}
+.ask li::before {
+  content: counter(ask); position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--slate-deep); color: #fff; font-weight: 700; font-size: 0.95rem;
+}
+.lead-after { max-width: 30em; margin: 14px auto 0; color: var(--ink-soft); }
+.lead, .lead-after { text-wrap: balance; }
 @keyframes drift-up { to { transform: translateY(-6px); } }
 
 /* ---------- main panel ---------- */
