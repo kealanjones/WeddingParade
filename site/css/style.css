@@ -264,6 +264,8 @@ h1 { font-size: clamp(2.3rem, 9vw, 3.6rem); line-height: 1.05; margin: 0; letter
 .photo-pick { background: var(--slate-deep); color: #fff; }
 .photo-pick:hover { background: var(--slate-dark); }
 .has-camera .camera-only { display: inline-flex; }
+.pick-alt, .has-camera .pick-solo { display: none; }
+.has-camera .pick-alt { display: inline; }
 .has-camera .photo-pick { background: var(--card); color: var(--slate-deep); border-color: #c5cdd3; }
 .has-camera .photo-pick:hover { border-color: var(--slate-deep); }
 
