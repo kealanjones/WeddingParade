@@ -158,6 +158,104 @@ h1 { font-size: clamp(2.3rem, 9vw, 3.6rem); line-height: 1.05; margin: 0; letter
 }
 @media (min-width: 560px) { .tips { grid-template-columns: 1fr 1fr; column-gap: 18px; } }
 
+/* ---------- how-it-works animation (11s loop) ---------- */
+.howto { margin: 0; }
+.howto-art { display: block; width: 100%; max-width: 380px; height: auto; margin: 0 auto; border-radius: 14px; background: #eef1f3; }
+.howto-art * { animation-duration: 11s; animation-iteration-count: infinite; animation-timing-function: linear; }
+.hb-line { fill: none; stroke: var(--ink); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 100 120; }
+/* still frame (reduced motion, or before the animation starts): the finished drawing */
+.hb-sky, .hb-pencil, .hb-crayon, .hb-phone, .hb-flash { opacity: 0; }
+.hb-paper { animation-name: hb-paper; }
+.hb-env { animation-name: hb-env; }
+.hb-ropes { animation-name: hb-ropes; }
+.hb-basket { animation-name: hb-basket; }
+.hb-basket-fill { animation-name: hb-basket-fill; }
+.hb-s1 { animation-name: hb-s1; } .hb-s2 { animation-name: hb-s2; } .hb-s3 { animation-name: hb-s3; } .hb-s4 { animation-name: hb-s4; }
+.hb-pencil { animation-name: hb-pencil; }
+.hb-crayon { animation-name: hb-crayon; }
+.hb-phone { animation-name: hb-phone; animation-timing-function: ease-out; }
+.hb-flash { animation-name: hb-flash; }
+.hb-sky { animation-name: hb-sky; }
+.hb-fly { animation-name: hb-fly; animation-timing-function: ease-in-out; }
+.hb-balloon { animation-name: hb-balloon; }
+@keyframes hb-paper { 0% { opacity: 0; } 3%, 60% { opacity: 1; } 66%, 100% { opacity: 0; } }
+@keyframes hb-env { 0%, 4% { stroke-dashoffset: 101; } 24%, 100% { stroke-dashoffset: 0; } }
+@keyframes hb-ropes { 0%, 24% { stroke-dashoffset: 101; } 27%, 100% { stroke-dashoffset: 0; } }
+@keyframes hb-basket { 0%, 27% { stroke-dashoffset: 101; } 30%, 100% { stroke-dashoffset: 0; } }
+@keyframes hb-basket-fill { 0%, 44% { opacity: 0; } 46%, 100% { opacity: 1; } }
+@keyframes hb-s1 { 0%, 30% { opacity: 0; } 33%, 100% { opacity: 1; } }
+@keyframes hb-s2 { 0%, 33.5% { opacity: 0; } 37%, 100% { opacity: 1; } }
+@keyframes hb-s3 { 0%, 37% { opacity: 0; } 40.5%, 100% { opacity: 1; } }
+@keyframes hb-s4 { 0%, 40.5% { opacity: 0; } 44%, 100% { opacity: 1; } }
+@keyframes hb-pencil {
+  0%, 3% { opacity: 0; transform: translate(180px, 50px); }
+  4% { opacity: 1; transform: translate(180px, 50px); }
+  6.2% { transform: translate(152px, 60px); }
+  8.4% { transform: translate(140px, 92px); }
+  10.8% { transform: translate(152px, 120px); }
+  13.2% { transform: translate(170px, 140px); }
+  14.8% { transform: translate(190px, 140px); }
+  17.2% { transform: translate(208px, 120px); }
+  19.6% { transform: translate(220px, 92px); }
+  21.8% { transform: translate(208px, 60px); }
+  24% { transform: translate(180px, 50px); }
+  24.5% { transform: translate(170px, 140px); }
+  26% { transform: translate(173px, 156px); }
+  27% { transform: translate(172px, 156px); }
+  28% { transform: translate(188px, 156px); }
+  29% { transform: translate(188px, 168px); }
+  30% { opacity: 1; transform: translate(172px, 168px); }
+  31%, 100% { opacity: 0; transform: translate(240px, 150px); }
+}
+@keyframes hb-crayon {
+  0%, 29% { opacity: 0; transform: translate(150px, 70px); }
+  30% { opacity: 1; transform: translate(150px, 70px); }
+  31.75% { transform: translate(152px, 120px); }
+  33.5% { transform: translate(168px, 64px); }
+  35.25% { transform: translate(170px, 124px); }
+  37% { transform: translate(188px, 64px); }
+  38.75% { transform: translate(190px, 124px); }
+  40.5% { transform: translate(208px, 70px); }
+  42.25% { transform: translate(210px, 118px); }
+  44% { transform: translate(182px, 162px); }
+  45.5% { opacity: 1; transform: translate(180px, 164px); }
+  46.5%, 100% { opacity: 0; transform: translate(240px, 150px); }
+}
+@keyframes hb-phone {
+  0%, 47% { opacity: 0; transform: translate(150px, 170px); }
+  54% { opacity: 1; transform: translate(0, 0); }
+  60% { opacity: 1; transform: translate(0, 0); }
+  66%, 100% { opacity: 0; transform: translate(0, 0); }
+}
+@keyframes hb-flash { 0%, 57% { opacity: 0; } 58% { opacity: 0.95; } 63%, 100% { opacity: 0; } }
+@keyframes hb-sky { 0%, 60% { opacity: 0; } 68%, 92% { opacity: 1; } 98%, 100% { opacity: 0; } }
+@keyframes hb-fly {
+  0%, 64% { transform: translate(0, 0); }
+  72% { transform: translate(-8px, -28px); }
+  80% { transform: translate(8px, -66px); }
+  88% { transform: translate(-6px, -112px); }
+  96%, 100% { transform: translate(4px, -170px); }
+}
+@keyframes hb-balloon { 0%, 90% { opacity: 1; } 95%, 100% { opacity: 0; } }
+
+.howto-steps {
+  list-style: none; margin: 10px auto 0; padding: 0; max-width: 380px;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center;
+  font-family: var(--hand); font-size: 1.35rem; font-weight: 600; line-height: 1.2; color: var(--ink-soft);
+}
+.howto-steps li { border-radius: 999px; padding: 2px 0; animation: 11s linear infinite; }
+.howto-steps li:nth-child(1) { animation-name: hb-step1; }
+.howto-steps li:nth-child(2) { animation-name: hb-step2; }
+.howto-steps li:nth-child(3) { animation-name: hb-step3; }
+.howto-steps li:nth-child(4) { animation-name: hb-step4; }
+@keyframes hb-step1 { 0%, 29% { color: var(--ink); background: #f5ebd3; } 30%, 100% { color: var(--ink-soft); background: transparent; } }
+@keyframes hb-step2 { 0%, 29% { color: var(--ink-soft); background: transparent; } 30%, 46% { color: var(--ink); background: #f5ebd3; } 47%, 100% { color: var(--ink-soft); background: transparent; } }
+@keyframes hb-step3 { 0%, 46% { color: var(--ink-soft); background: transparent; } 47%, 63% { color: var(--ink); background: #f5ebd3; } 64%, 100% { color: var(--ink-soft); background: transparent; } }
+@keyframes hb-step4 { 0%, 63% { color: var(--ink-soft); background: transparent; } 64%, 99% { color: var(--ink); background: #f5ebd3; } 100% { color: var(--ink-soft); background: transparent; } }
+@media (prefers-reduced-motion: reduce) {
+  .howto-art *, .howto-steps li { animation: none !important; }
+}
+
 /* photo buttons: on touch devices (make.js adds .has-camera) the camera
    comes first and the library is secondary; computers get one picker */
 .photo-buttons { display: grid; gap: 10px; }

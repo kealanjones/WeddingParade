@@ -91,6 +91,50 @@
                 <h3>Draw it on paper, then take a photo</h3>
               </div>
             </div>
+            <figure class="howto">
+              <!-- a looping demo: draw on plain paper, colour it in, photograph it, it flies -->
+              <svg class="howto-art" viewBox="0 0 360 220" role="img" aria-label="How it works: draw a hot-air balloon on plain white paper, colour it in, take a photo of it, and it flies off into the sky.">
+              <defs>
+                <clipPath id="hb-env"><path d="M180 50C152 50 140 72 140 92C140 114 160 128 170 140L190 140C200 128 220 114 220 92C220 72 208 50 180 50Z"/></clipPath>
+                <linearGradient id="hb-sky-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9fd3f5"/><stop offset="1" stop-color="#fbe7c6"/></linearGradient>
+              </defs>
+              <rect class="hb-sky" width="360" height="220" rx="14" fill="url(#hb-sky-fill)"/>
+              <g class="hb-paper"><rect x="105" y="28" width="150" height="178" rx="3" fill="#fff" stroke="#dfe3e7" transform="rotate(-2 180 117)"/></g>
+              <g class="hb-balloon"><g class="hb-fly">
+                <g clip-path="url(#hb-env)">
+                  <rect class="hb-s1" x="138" y="48" width="22" height="94" fill="#ef5b6a"/>
+                  <rect class="hb-s2" x="160" y="48" width="20" height="94" fill="#ffc94d"/>
+                  <rect class="hb-s3" x="180" y="48" width="20" height="94" fill="#4fb3a5"/>
+                  <rect class="hb-s4" x="200" y="48" width="22" height="94" fill="#5b8def"/>
+                </g>
+                <rect class="hb-basket-fill" x="172" y="156" width="16" height="12" rx="2" fill="#b07444"/>
+                <path class="hb-line hb-env" d="M180 50C152 50 140 72 140 92C140 114 160 128 170 140L190 140C200 128 220 114 220 92C220 72 208 50 180 50Z" pathLength="100"/>
+                <path class="hb-line hb-ropes" d="M170 140L173 156M190 140L187 156" pathLength="100"/>
+                <path class="hb-line hb-basket" d="M172 156h16v12h-16z" pathLength="100"/>
+              </g></g>
+              <g class="hb-pencil"><g transform="rotate(28)">
+                <rect x="-4.5" y="-50" width="9" height="38" rx="1.5" fill="#f2b33d"/>
+                <rect x="-4.5" y="-56" width="9" height="7" rx="2" fill="#ef8f9a"/>
+                <polygon points="-4.5,-12 4.5,-12 0,0" fill="#f6dcb0"/>
+                <polygon points="-1.6,-4.3 1.6,-4.3 0,0" fill="#26313a"/>
+              </g></g>
+              <g class="hb-crayon"><g transform="rotate(28)">
+                <rect x="-4.5" y="-50" width="9" height="38" rx="1.5" fill="#ef5b6a"/>
+                <rect x="-4.5" y="-56" width="9" height="7" rx="2" fill="#c94451"/>
+                <polygon points="-4.5,-12 4.5,-12 0,0" fill="#f6dcb0"/>
+                <polygon points="-1.6,-4.3 1.6,-4.3 0,0" fill="#ef5b6a"/>
+              </g></g>
+              <g class="hb-phone">
+                <rect x="128" y="24" width="104" height="186" rx="16" fill="none" stroke="#26313a" stroke-width="9"/>
+                <rect x="166" y="31" width="28" height="5" rx="2.5" fill="#26313a"/>
+                <circle cx="180" cy="190" r="9" fill="#fff" stroke="#26313a" stroke-width="3"/>
+              </g>
+              <rect class="hb-flash" width="360" height="220" rx="14" fill="#fff"/>
+              </svg>
+              <ol class="howto-steps" aria-hidden="true">
+                <li>Draw</li><li>Colour</li><li>Photo</li><li>Fly!</li>
+              </ol>
+            </figure>
             <ul class="tips">
               <li><strong>Plain white paper</strong>, with no lines or squares</li>
               <li><strong>Colour encouraged!</strong> The brighter the better</li>
