@@ -463,6 +463,16 @@
       g.closePath();
       g.fill();
     }
+    // "JUST MARRIED", one letter per flag
+    const word = "JUSTMARRIED";
+    g.fillStyle = "#fff";
+    g.textAlign = "center";
+    g.textBaseline = "middle";
+    g.font = "700 " + Math.round(fw * 0.34) + "px Figtree, system-ui, sans-serif";
+    for (let i = 0; i < n; i++) {
+      const tm = (i + 0.5) / n;
+      g.fillText(word[i], lerp(px0, px1, tm), py + Math.sin(tm * Math.PI) * sag + fw * 0.28);
+    }
   }
 
   // Floor-length curtain beside the window, gathered with a tie-back.
