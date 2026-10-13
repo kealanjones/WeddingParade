@@ -355,6 +355,11 @@
       $("name").focus();
       return;
     }
+    if (!note) {
+      formError("Please write a little note to go with your balloon. Sop and Bop will read every one!");
+      $("note").focus();
+      return;
+    }
     if (name.length > 60 || note.length > 280) {
       formError("That's a little too long. Names can be up to 60 characters and notes up to 280.");
       return;

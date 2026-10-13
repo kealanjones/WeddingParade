@@ -130,6 +130,7 @@ try {
     await page.click("#crop-done");
     await page.waitForSelector("#step-preview:not([hidden])");
     await page.fill("#name", `Outage ${stamp}`);
+    await page.fill("#note", "Sent while the database was down");
     const before = db.rows.length;
     db.failRows = 3; // every attempt in this send fails
     await page.click("#submit");
@@ -198,6 +199,11 @@ try {
     await page.waitForSelector("#step-preview:not([hidden])");
     await shot(page, "06-draw-preview-phone.png", false);
     await page.fill("#name", `Test Drawn ${stamp}`);
+    // the note is required
+    await page.click("#submit");
+    await page.waitForSelector("#form-error:not([hidden])");
+    results.push("no note: " + (await page.textContent("#form-error")).slice(0, 40));
+    await page.fill("#note", "Drawn with love");
     await page.click("#submit");
     await page.waitForSelector("#step-thanks:not([hidden])", { timeout: 30000 });
     results.push("drawing route submitted");
