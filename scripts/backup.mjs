@@ -26,11 +26,11 @@ async function getJson(url, what) {
   return res.json();
 }
 
-async function listImages() {
+async function listImages(bucket) {
   const names = [];
   for (let offset = 0; ; offset += 1000) {
     const res = await ok(
-      await fetch(`${base}/storage/v1/object/list/balloons`, {
+      await fetch(`${base}/storage/v1/object/list/${bucket}`, {
         method: "POST",
         headers: serviceHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ prefix: "", limit: 1000, offset, sortBy: { column: "name", order: "asc" } }),
@@ -52,7 +52,14 @@ try {
 } catch (e) {
   console.warn("No archive table yet (run the 20261012 migration):", e.message.split("\n")[0]);
 }
-const stored = await listImages();
+const stored = await listImages("balloons");
+// guests' original photos (private bucket), backed up alongside
+let originals = [];
+try {
+  originals = await listImages("originals");
+} catch (e) {
+  console.warn("No originals bucket yet (run the 20261014 migration):", e.message.split("\n")[0]);
+}
 
 // 2. merge with what the backup already knows
 fs.mkdirSync(out, { recursive: true });
@@ -67,21 +74,24 @@ for (const r of rows) {
 for (const [id, b] of byId) if (!seen.has(id) && !b.missing_since) b.missing_since = now;
 const all = [...byId.values()].sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
 
-// 3. pictures: anything in storage or referenced by a row, not yet saved
+// 3. pictures: anything in storage or referenced by a row, not yet saved;
+//    originals go in images/originals
 const wanted = new Set([...stored, ...all.map((b) => b.image_path).filter(Boolean)]);
 let fetched = 0, failed = 0;
-for (const name of wanted) {
-  if (!/^[\w.-]+$/.test(name)) continue;
-  if (hasFile(out, path.join("images", name))) continue;
-  const res = await fetch(`${base}/storage/v1/object/balloons/${encodeURIComponent(name)}`, { headers: serviceHeaders() });
+async function save(bucket, name, dest) {
+  if (!/^[\w.-]+$/.test(name)) return;
+  if (hasFile(out, dest)) return;
+  const res = await fetch(`${base}/storage/v1/object/${bucket}/${encodeURIComponent(name)}`, { headers: serviceHeaders() });
   if (!res.ok) {
     failed++;
-    console.warn(`Could not download ${name} (${res.status})`);
-    continue;
+    console.warn(`Could not download ${bucket}/${name} (${res.status})`);
+    return;
   }
-  writeFile(out, path.join("images", name), Buffer.from(await res.arrayBuffer()), pass);
+  writeFile(out, dest, Buffer.from(await res.arrayBuffer()), pass);
   fetched++;
 }
+for (const name of wanted) await save("balloons", name, path.join("images", name));
+for (const name of originals) await save("originals", name, path.join("images", "originals", name));
 
 // 4. details, as JSON (for restoring) and CSV (for reading)
 writeFile(out, "balloons.json", JSON.stringify(all, null, 2), pass);
@@ -97,7 +107,7 @@ fs.writeFileSync(
     "Sop and Bop's Wedding Balloon Parade - backup",
     `Last backup: ${now}`,
     `Balloons: ${all.length} (${missing} no longer in Supabase, kept here)`,
-    `Pictures: ${[...wanted].length}`,
+    `Pictures: ${[...wanted].length}, original photos: ${originals.length} (in images/originals)`,
     pass ? "Files ending .enc are encrypted. Decrypt with: BACKUP_PASSPHRASE=... node scripts/decrypt-backup.mjs <this folder> <output folder>" : "Files are not encrypted.",
     "Restore into Supabase with: node scripts/restore.mjs <folder>  (see README)",
     "",

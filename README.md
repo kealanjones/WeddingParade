@@ -58,8 +58,10 @@ There are four layers, so any one of them failing doesn't lose anything:
 
 1. **On the guest's phone.** A balloon is saved on the device *before* it is sent and removed only once Supabase confirms it. If the signal drops, the page retries, and anything still unsent goes automatically the next time the guest opens the page. Guests can also tap **Save a copy** and send it on WhatsApp.
 2. **In the database.** Every balloon added, changed or deleted is also copied into a `balloons_archive` table. A mistaken `update` or `delete` can be undone (below).
-3. **Off-site, every 3 hours.** A GitHub Action copies every balloon (details and pictures) into the `backups` branch of this repository, **encrypted** with a passphrase only you know. The repository is public, so nothing readable goes there. A backup never forgets: if a balloon disappears from Supabase it stays in the backup, marked "missing_since". If a run fails, GitHub emails you.
-4. **By hand, any time.** In Supabase: **Table Editor -> balloons -> Export -> CSV**, and **Storage -> balloons**, select all, **Download**.
+3. **Off-site, every 3 hours.** A GitHub Action copies every balloon (details, pictures and original photos) into the `backups` branch of this repository, **encrypted** with a passphrase only you know. The repository is public, so nothing readable goes there. A backup never forgets: if a balloon disappears from Supabase it stays in the backup, marked "missing_since". If a run fails, GitHub emails you.
+4. **By hand, any time.** In Supabase: **Table Editor -> balloons -> Export -> CSV**, and **Storage -> balloons** (and **originals**), select all, **Download**.
+
+**Original photos.** For photo balloons the site also keeps the guest's photo as it was before the cut-out, in the private **Storage -> originals** bucket, with the same name as the balloon's picture (`<id>.jpg` next to `<id>.png`). Guests can add files there but can't see or list them. The original goes up after the balloon itself, in the background, so a guest is never held up by it; if it can't go straight away it stays saved on their phone and goes the next time they open the page. Use it to remake or tidy up a poor cut-out. (Balloons sent before 14 October have no original.)
 
 ### One-time setup (about 5 minutes)
 
@@ -139,6 +141,8 @@ This creates the Supabase project (London region), applies
 - `balloon_count()` returns how many have been sent in total, for the waiting screen.
 - Storage bucket `balloons` is public-read. Visitors can upload PNGs up to 3 MB, but can't list,
   overwrite or delete them.
+- Storage bucket `originals` is private. Visitors can upload their original photo (JPEG, up to 10 MB)
+  but can't read, list, overwrite or delete anything in it.
 
 ## How the photo cleanup works
 

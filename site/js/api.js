@@ -54,18 +54,35 @@
   }
 
   // Tries a few times with a pause, for wobbly phone signal.
-  async function submitBalloon(balloon) {
-    const b = { ...balloon, id: balloon.id || newId() };
+  async function withRetries(fn) {
     let lastErr;
     for (const wait of [0, 1500, 4000]) {
       if (wait) await new Promise((r) => setTimeout(r, wait));
       try {
-        return await sendOnce(b);
+        return await fn();
       } catch (err) {
         lastErr = err;
       }
     }
     throw lastErr;
+  }
+
+  async function submitBalloon(balloon) {
+    const b = { ...balloon, id: balloon.id || newId() };
+    return withRetries(() => sendOnce(b));
+  }
+
+  // The guest's photo before the cut-out, kept privately as a backup.
+  // Same name as the balloon, so they're easy to match up.
+  async function uploadOriginal(id, blob) {
+    return withRetries(async () => {
+      const res = await fetch(base + "/storage/v1/object/originals/" + id + ".jpg", {
+        method: "POST",
+        headers: headers({ "Content-Type": "image/jpeg", "x-upsert": "false" }),
+        body: blob,
+      });
+      if (!(await alreadyThere(res))) await check(res, "Saving the original photo");
+    });
   }
 
   async function approvedBalloons() {
@@ -94,5 +111,5 @@
     return base + "/storage/v1/object/public/balloons/" + encodeURIComponent(path);
   }
 
-  window.ParadeApi = { submitBalloon, approvedBalloons, balloonCount, imageUrl, newId };
+  window.ParadeApi = { submitBalloon, uploadOriginal, approvedBalloons, balloonCount, imageUrl, newId };
 })();

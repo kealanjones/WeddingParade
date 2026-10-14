@@ -5,6 +5,7 @@
 //
 // Only adds what is missing; existing balloons are left alone. Add
 // --include-removed to also bring back balloons that were deleted on purpose.
+import fs from "node:fs";
 import path from "node:path";
 import { readFile, supabaseUrl, serviceHeaders, ok } from "./backup-lib.mjs";
 
@@ -38,4 +39,22 @@ for (const b of list) {
   await ok(res, `Restoring ${b.name}`);
   rows++;
 }
-console.log(`Restored ${rows} balloons and ${pics} pictures into ${base}`);
+// guests' original photos, back into the private "originals" bucket
+let originals = 0;
+const origDir = path.join(dir, "images", "originals");
+if (fs.existsSync(origDir)) {
+  for (const f of fs.readdirSync(origDir)) {
+    const name = f.replace(/\.enc$/, "");
+    if (!/^[\w.-]+$/.test(name)) continue;
+    const data = readFile(dir, path.join("images", "originals", name), pass);
+    if (!data) continue;
+    const res = await fetch(`${base}/storage/v1/object/originals/${encodeURIComponent(name)}`, {
+      method: "POST",
+      headers: serviceHeaders({ "Content-Type": "image/jpeg", "x-upsert": "true" }),
+      body: data,
+    });
+    await ok(res, `Uploading original ${name}`);
+    originals++;
+  }
+}
+console.log(`Restored ${rows} balloons, ${pics} pictures and ${originals} original photos into ${base}`);

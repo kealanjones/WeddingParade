@@ -54,15 +54,21 @@
   // ---------- never lose a balloon ----------
   // Balloons are saved on this device before sending and removed only once
   // Supabase has them. Anything left over is re-sent next time.
+  // A photo balloon also carries the original photo; once the balloon itself
+  // is in, it stays saved (marked sent) until the original is in too.
   async function resendSaved() {
     const saved = await Outbox.all();
     if (!saved.length || cfg.supabaseUrl.includes("YOUR-PROJECT")) return;
     let sent = 0;
     for (const b of saved) {
       try {
-        await ParadeApi.submitBalloon(b);
+        if (!b.sent) {
+          await ParadeApi.submitBalloon(b);
+          sent++;
+          if (b.original) await Outbox.put({ ...b, sent: true });
+        }
+        if (b.original) await ParadeApi.uploadOriginal(b.id, b.original);
         await Outbox.remove(b.id);
-        sent++;
       } catch (e) {}
     }
     const note = $("outbox-note");
@@ -73,6 +79,26 @@
   }
   resendSaved();
   addEventListener("online", resendSaved);
+
+  // The balloon is in: now the original photo, in the background. The guest
+  // never waits for this or sees it fail; if it can't go now it stays saved
+  // on the device and goes next visit.
+  function sendOriginalLater(balloon) {
+    Promise.resolve()
+      .then(() => ParadeApi.uploadOriginal(balloon.id, balloon.original))
+      .then(() => Outbox.remove(balloon.id))
+      .catch((e) => console.warn("Original photo not sent yet, kept for next visit:", e.message));
+  }
+
+  function photoAsJpeg(canvas) {
+    return new Promise((resolve) => {
+      try {
+        canvas.toBlob((b) => resolve(b || null), "image/jpeg", 0.92);
+      } catch (e) {
+        resolve(null);
+      }
+    });
+  }
 
   function saveCopy(blob, name) {
     if (!blob) return;
@@ -375,10 +401,17 @@
       const blob = await Cleanup.toPngBlob(canvas);
       state.lastBlob = blob;
       state.pendingId = state.pendingId || ParadeApi.newId();
-      balloon = { id: state.pendingId, blob, name, note, source: state.source };
+      // the photo before the cut-out, as a backup (photo balloons only)
+      const original = state.source === "photo" && state.photo ? await photoAsJpeg(state.photo) : null;
+      balloon = { id: state.pendingId, blob, name, note, source: state.source, original };
       await Outbox.put(balloon);
       await ParadeApi.submitBalloon(balloon);
-      await Outbox.remove(balloon.id);
+      if (original) {
+        await Outbox.put({ ...balloon, sent: true });
+        sendOriginalLater(balloon);
+      } else {
+        await Outbox.remove(balloon.id);
+      }
       state.pendingId = null;
       $("thanks-name").textContent = name;
       $("thanks-img").src = URL.createObjectURL(blob);

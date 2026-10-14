@@ -21,7 +21,7 @@ await new Promise((r) => setTimeout(r, 800));
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM || undefined });
 
 // In-memory stand-in for Supabase REST + Storage.
-const db = { rows: [], files: new Map(), failRows: 0 };
+const db = { rows: [], files: new Map(), originals: new Map(), failRows: 0, failOriginals: 0 };
 async function fakeSupabase(context) {
   await context.route(`http://127.0.0.1:${PORT}/config.js`, async (route) => {
     const res = await route.fetch();
@@ -47,6 +47,13 @@ async function fakeSupabase(context) {
       fs.writeFileSync(path.join(out, `upload-${db.files.size}.png`), req.postDataBuffer());
       return route.fulfill({ status: 200, headers: cors, json: { Key: "ok" } });
     }
+    if (url.pathname.startsWith("/storage/v1/object/originals/") && req.method() === "POST") {
+      if (db.failOriginals > 0) { db.failOriginals--; return route.fulfill({ status: 503, headers: cors, body: "storage unavailable" }); }
+      const name = url.pathname.split("/").pop();
+      if (db.originals.has(name)) return route.fulfill({ status: 400, headers: cors, json: { statusCode: "409", error: "Duplicate", message: "The resource already exists" } });
+      db.originals.set(name, { body: req.postDataBuffer(), type: req.headers()["content-type"] });
+      return route.fulfill({ status: 200, headers: cors, json: { Key: "ok" } });
+    }
     if (url.pathname === "/rest/v1/balloons" && req.method() === "POST") {
       const row = JSON.parse(req.postData());
       if (row.approved !== undefined) return route.fulfill({ status: 401, headers: cors, body: "no" });
@@ -63,6 +70,15 @@ async function fakeSupabase(context) {
     }
     return route.fulfill({ status: 404, headers: cors, body: "unmocked " + url.pathname });
   });
+}
+
+async function waitFor(fn, ms) {
+  const end = Date.now() + ms;
+  for (;;) {
+    const v = await fn();
+    if (v || Date.now() > end) return v;
+    await new Promise((r) => setTimeout(r, 200));
+  }
 }
 
 async function newPage(viewport, opts = {}) {
@@ -118,6 +134,15 @@ try {
     await page.waitForTimeout(400);
     await shot(page, "04-thanks-phone.png", false);
     results.push("photo route submitted");
+    if (!live) {
+      // the original photo follows in the background, and the device is cleared
+      const row = db.rows.find((r) => r.name === `Test Photo ${stamp}`);
+      const orig = await waitFor(() => db.originals.get(row.id + ".jpg"), 10000);
+      const isJpeg = orig && orig.body[0] === 0xff && orig.body[1] === 0xd8 && orig.type === "image/jpeg";
+      const left = await waitFor(async () => (await page.evaluate(async () => (await Outbox.all()).length)) === 0, 5000);
+      results.push(`original photo: saved as jpeg = ${!!isJpeg} (${orig ? Math.round(orig.body.length / 1024) : 0} KB), device cleared = ${!!left}`);
+      if (!isJpeg || !left) throw new Error("original photo not saved");
+    }
     await page.context().close();
   }
 
@@ -146,6 +171,40 @@ try {
     const mine = db.rows.filter((r) => r.name === `Outage ${stamp}`).length;
     results.push(`outage: after revisit rows for guest = ${mine}, left on device = ${left}`);
     if (mine !== 1 || left !== 0 || kept !== 1) throw new Error("outbox did not recover the balloon exactly once");
+    const outageRow = db.rows.find((r) => r.name === `Outage ${stamp}`);
+    if (!db.originals.has(outageRow.id + ".jpg")) throw new Error("original photo not sent after the outage");
+    results.push("outage: original photo arrived too");
+    await page.context().close();
+  }
+
+  // ---- 1c. only the original photo fails: the guest isn't held up, it goes next visit ----
+  if (!live) {
+    const page = await newPage(phone, { touch: true });
+    await page.goto(`http://127.0.0.1:${PORT}/index.html`);
+    await page.setInputFiles("#photo-input", path.join(root, "tests/photos/2-heart.jpg"));
+    await page.waitForSelector("#step-crop:not([hidden])");
+    await page.click("#crop-done");
+    await page.waitForSelector("#step-preview:not([hidden])");
+    await page.fill("#name", `Original later ${stamp}`);
+    await page.fill("#note", "My photo backup goes later");
+    db.failOriginals = 99;
+    const t0 = Date.now();
+    await page.click("#submit");
+    await page.waitForSelector("#step-thanks:not([hidden])", { timeout: 30000 });
+    const thanksAfter = Date.now() - t0;
+    const row = db.rows.find((r) => r.name === `Original later ${stamp}`);
+    await page.waitForTimeout(7000); // let the background retries give up
+    const waiting = await page.evaluate(async () => (await Outbox.all()).map((b) => ({ sent: !!b.sent, hasOriginal: !!b.original })));
+    results.push(`original fails: thanks after ${thanksAfter} ms, balloon row = ${!!row}, original saved = ${db.originals.has(row.id + ".jpg")}, kept on device = ${JSON.stringify(waiting)}`);
+    if (!row || db.originals.has(row.id + ".jpg") || waiting.length !== 1 || !waiting[0].sent || !waiting[0].hasOriginal) throw new Error("original photo not kept for later");
+    db.failOriginals = 0;
+    await page.reload();
+    const got = await waitFor(() => db.originals.has(row.id + ".jpg"), 15000);
+    const left = await waitFor(async () => (await page.evaluate(async () => (await Outbox.all()).length)) === 0, 5000);
+    const rowsNow = db.rows.filter((r) => r.name === `Original later ${stamp}`).length;
+    const noteShown = await page.isVisible("#outbox-note");
+    results.push(`original fails: next visit original saved = ${!!got}, device cleared = ${!!left}, balloon rows = ${rowsNow}, "sent earlier" note shown = ${noteShown}`);
+    if (!got || !left || rowsNow !== 1 || noteShown) throw new Error("original photo did not recover cleanly");
     await page.context().close();
   }
 
@@ -207,6 +266,13 @@ try {
     await page.click("#submit");
     await page.waitForSelector("#step-thanks:not([hidden])", { timeout: 30000 });
     results.push("drawing route submitted");
+    if (!live) {
+      await page.waitForTimeout(500);
+      const row = db.rows.find((r) => r.name === `Test Drawn ${stamp}`);
+      const left = await page.evaluate(async () => (await Outbox.all()).length);
+      results.push(`drawing: no original photo = ${!db.originals.has(row.id + ".jpg")}, device cleared = ${left === 0}`);
+      if (db.originals.has(row.id + ".jpg") || left !== 0) throw new Error("drawn balloon handled wrongly");
+    }
     await page.context().close();
   }
 

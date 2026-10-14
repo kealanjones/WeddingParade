@@ -12,10 +12,11 @@ import assert from "node:assert/strict";
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
 const tmp = fs.mkdtempSync(path.join(process.env.TEST_TMP || os.tmpdir(), "parade-backup-"));
 const png = (n) => Buffer.from(`\x89PNG fake picture ${n}`);
+const jpg = (n) => Buffer.from(`\xff\xd8 fake original photo ${n}`);
 const id = (n) => `0000000${n}-0000-4000-8000-000000000000`;
 
 function fakeSupabase() {
-  const db = { rows: [], files: new Map(), requests: 0, downloads: 0 };
+  const db = { rows: [], files: new Map(), originals: new Map(), noOriginals: false, requests: 0, downloads: 0 };
   const server = http.createServer(async (req, res) => {
     db.requests++;
     const url = new URL(req.url, "http://x");
@@ -29,15 +30,20 @@ function fakeSupabase() {
       if (!db.rows.some((r) => r.id === row.id)) db.rows.push(row);
       res.writeHead(201); return res.end();
     }
-    if (url.pathname === "/storage/v1/object/list/balloons") return json(200, [...db.files.keys()].map((name) => ({ name, id: name })));
-    const m = url.pathname.match(/^\/storage\/v1\/object\/balloons\/(.+)$/);
+    const store = (bucket) => (bucket === "originals" ? db.originals : db.files);
+    const l = url.pathname.match(/^\/storage\/v1\/object\/list\/(balloons|originals)$/);
+    if (l) {
+      if (l[1] === "originals" && db.noOriginals) return json(400, { error: "Bucket not found" });
+      return json(200, [...store(l[1]).keys()].map((name) => ({ name, id: name })));
+    }
+    const m = url.pathname.match(/^\/storage\/v1\/object\/(balloons|originals)\/(.+)$/);
     if (m && req.method === "GET") {
-      const f = db.files.get(decodeURIComponent(m[1]));
+      const f = store(m[1]).get(decodeURIComponent(m[2]));
       db.downloads++;
       if (!f) { res.writeHead(404); return res.end(); }
       res.writeHead(200, { "content-type": "image/png" }); return res.end(f);
     }
-    if (m && req.method === "POST") { db.files.set(decodeURIComponent(m[1]), body); res.writeHead(200); return res.end("{}"); }
+    if (m && req.method === "POST") { store(m[1]).set(decodeURIComponent(m[2]), body); res.writeHead(200); return res.end("{}"); }
     res.writeHead(404); res.end("unmocked " + url.pathname);
   });
   return new Promise((r) => server.listen(0, "127.0.0.1", () => r({ db, server, url: `http://127.0.0.1:${server.address().port}` })));
@@ -57,11 +63,13 @@ for (const n of [1, 2]) {
   live.db.rows.push({ id: id(n), created_at: `2026-10-1${n}T10:00:00Z`, name: `Guest ${n}`, note: n === 1 ? 'Hello, "you two"' : null, image_path: `${id(n)}.png`, source: "photo", approved: false });
   live.db.files.set(`${id(n)}.png`, png(n));
 }
+live.db.originals.set(`${id(1)}.jpg`, jpg(1)); // guest 1 sent a photo; its original is kept too
 
 // 1. first backup: everything, encrypted
 console.log(await run("backup.mjs", [backup], env));
 assert.ok(fs.existsSync(path.join(backup, "balloons.json.enc")));
 assert.ok(fs.existsSync(path.join(backup, `images/${id(1)}.png.enc`)));
+assert.ok(fs.existsSync(path.join(backup, `images/originals/${id(1)}.jpg.enc`)), "original photo backed up");
 assert.ok(!fs.readFileSync(path.join(backup, "balloons.json.enc")).includes("Guest 1"), "names are not readable");
 
 // 2. second backup after a new balloon: only the new picture is downloaded
@@ -90,6 +98,7 @@ const saved = JSON.parse(fs.readFileSync(path.join(plain, "balloons.json"), "utf
 assert.equal(saved.length, 3);
 assert.ok(saved.find((b) => b.id === id(2)).missing_since, "deleted balloon kept and marked");
 assert.ok(fs.readFileSync(path.join(plain, `images/${id(2)}.png`)).equals(png(2)));
+assert.ok(fs.readFileSync(path.join(plain, `images/originals/${id(1)}.jpg`)).equals(jpg(1)), "original photo decrypts");
 assert.match(fs.readFileSync(path.join(plain, "balloons.csv"), "utf8"), /"Hello, ""you two"""/);
 
 // 7. restore into an empty project, including the removed one
@@ -97,9 +106,20 @@ const fresh = await fakeSupabase();
 console.log(await run("restore.mjs", [backup, "--include-removed"], { SUPABASE_URL: fresh.url }));
 assert.equal(fresh.db.rows.length, 3);
 assert.ok(fresh.db.files.get(`${id(3)}.png`).equals(png(3)));
+assert.ok(fresh.db.originals.get(`${id(1)}.jpg`).equals(jpg(1)), "original photo restored");
 // and running it again adds nothing twice
 await run("restore.mjs", [backup, "--include-removed"], { SUPABASE_URL: fresh.url });
 assert.equal(fresh.db.rows.length, 3);
+
+// 8. a project without the originals bucket still backs up everything else
+const older = await fakeSupabase();
+older.db.noOriginals = true;
+older.db.rows.push({ id: id(4), created_at: "2026-10-14T10:00:00Z", name: "Guest 4", note: "y", image_path: `${id(4)}.png`, source: "photo", approved: false });
+older.db.files.set(`${id(4)}.png`, png(4));
+const backup2 = path.join(tmp, "backup2");
+console.log(await run("backup.mjs", [backup2], { SUPABASE_URL: older.url }));
+assert.ok(fs.existsSync(path.join(backup2, `images/${id(4)}.png.enc`)));
+older.server.close();
 
 live.server.close();
 fresh.server.close();
