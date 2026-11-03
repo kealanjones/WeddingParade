@@ -1,5 +1,5 @@
 Sop and Bop's Wedding Balloon Parade - backup
-Last backup: 2026-11-03T06:44:11.300Z
+Last backup: 2026-11-03T17:00:35.467Z
 Balloons: 36 (6 no longer in Supabase, kept here)
 Pictures: 36, original photos: 22 (in images/originals)
 Files ending .enc are encrypted. Decrypt with: BACKUP_PASSPHRASE=... node scripts/decrypt-backup.mjs <this folder> <output folder>
